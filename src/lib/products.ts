@@ -59,8 +59,8 @@ export async function listarProdutos(params: ListarProdutosParams): Promise<List
 
   const filtros = Prisma.sql`
     "ativo" = true
-    AND "nome" IS NOT NULL
-    AND "imageLink" IS NOT NULL
+    AND "nome" IS NOT NULL AND trim("nome") != ''
+    AND "imageLink" IS NOT NULL AND trim("imageLink") != ''
     ${params.categoria ? Prisma.sql`AND "categoria" = ${params.categoria}` : Prisma.empty}
     ${
       params.busca
