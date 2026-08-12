@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import { sincronizarProdutosXbz } from "@/lib/sync";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60; // catálogo pode ter milhares de itens
+// Com upsert em lote (ver src/lib/sync.ts), 16k+ produtos sincronizam em
+// segundos — 120s é margem de sobra, não o esperado. No plano Hobby da
+// Vercel o teto real é 60s independente do que configurarmos aqui.
+export const maxDuration = 120;
 
 function autorizado(request: Request): boolean {
   const secret = process.env.CRON_SECRET;
