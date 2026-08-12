@@ -1,0 +1,86 @@
+// Schema do banco de dados — Twins Artigos Personalizados
+// Postgres (Vercel Postgres / Neon). Rodar `npm run prisma:migrate` localmente
+// (com DATABASE_URL configurado) para gerar a primeira migration.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Catálogo local, sincronizado periodicamente da API da XBZ.
+// O site NUNCA lê a XBZ direto — sempre lê daqui.
+model Product {
+  id             Int      @id @default(autoincrement())
+
+  // Dados vindos da XBZ (ver XBZ_API__GuiaIntegracao__V001.pdf, endpoint /ProdutosListar)
+  xbzId          Int      @unique // "id" retornado pela XBZ
+  codigoXbz      String   @unique // SKU, usado depois para gerar pedido/orçamento
+  codigoComposto String? // código com indicação de cor
+  codigoAmigavel String? // código da família de produtos
+  descricao      String
+  siteLink       String?
+  imageLink      String?
+  xbzCadastroData DateTime?
+
+  // Dados calculados por nós (a XBZ não retorna preço nem categoria)
+  categoria      String   @default("Outros") // classificado por palavra-chave, ver src/lib/categorize.ts
+  ativo          Boolean  @default(true) // false = sumiu da última sincronização (não deletamos, só ocultamos)
+
+  syncedAt       DateTime @default(now()) // última vez que foi visto na XBZ
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  quoteItems     QuoteRequestItem[]
+
+  @@index([categoria])
+  @@index([ativo])
+}
+
+// Pedido de orçamento feito por um visitante do site (não é o pedido real na XBZ —
+// é um lead que o time da Twins confirma manualmente, por WhatsApp/telefone).
+model QuoteRequest {
+  id           Int      @id @default(autoincrement())
+
+  empresa      String
+  contatoNome  String
+  contatoFone  String
+  contatoEmail String?
+  observacoes  String?
+
+  status       String   @default("novo") // novo | em_andamento | respondido | encerrado
+
+  createdAt    DateTime @default(now())
+
+  items        QuoteRequestItem[]
+}
+
+model QuoteRequestItem {
+  id             Int          @id @default(autoincrement())
+
+  quoteRequest   QuoteRequest @relation(fields: [quoteRequestId], references: [id], onDelete: Cascade)
+  quoteRequestId Int
+
+  product        Product      @relation(fields: [productId], references: [id])
+  productId      Int
+
+  quantidade     Int
+}
+
+// Histórico de execuções da sincronização com a XBZ — útil pra auditar
+// quantas chamadas foram feitas (respeitar limite de 24/dia, compartilhado com o ERP).
+model SyncLog {
+  id            Int       @id @default(autoincrement())
+
+  startedAt     DateTime  @default(now())
+  finishedAt    DateTime?
+  status        String // running | success | error
+  totalFetched  Int?
+  totalCreated  Int?
+  totalUpdated  Int?
+  totalDeactivated Int?
+  errorMessage  String?
+}
