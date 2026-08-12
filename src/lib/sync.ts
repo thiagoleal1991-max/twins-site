@@ -39,11 +39,12 @@ export async function sincronizarProdutosXbz(): Promise<SyncResult> {
         codigoXbz: produto.codigoXbz,
         codigoComposto: produto.codigoComposto,
         codigoAmigavel: produto.codigoAmigavel,
+        nome: produto.nome,
         descricao: produto.descricao,
         siteLink: produto.siteLink,
         imageLink: produto.imageLink,
         xbzCadastroData: produto.cadastroData ? new Date(produto.cadastroData) : null,
-        categoria: categorizar(produto.descricao),
+        categoria: categorizar(`${produto.nome ?? ""} ${produto.descricao}`),
         ativo: true,
         syncedAt: new Date(),
       };
