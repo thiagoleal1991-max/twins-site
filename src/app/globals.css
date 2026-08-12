@@ -1,0 +1,170 @@
+/*
+ * Estilos mínimos/funcionais — NÃO é o design final.
+ * Quando o novo protótipo visual chegar, isso é substituído pelos
+ * componentes com a identidade real da marca (roxo profundo, Space
+ * Grotesk/Inter, animações etc — ver reference/twins-site-prototipo.html).
+ * Por ora, só o suficiente pra navegar e testar o catálogo/orçamento.
+ */
+
+:root {
+  --purple-deep: #3b1560;
+  --purple-mid: #5b2a8c;
+  --glow: #d64fe0;
+  --ink: #130b1c;
+  --cream: #f5f1ea;
+  --cream-dim: #dcd3e8;
+  --line: #e4dfee;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: #fff;
+}
+
+a {
+  color: var(--purple-mid);
+}
+
+header.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: var(--ink);
+  color: var(--cream);
+}
+
+header.site-header a {
+  color: var(--cream);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+header.site-header nav {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.badge-dev {
+  display: inline-block;
+  font-size: 12px;
+  background: #fff3cd;
+  color: #7a5b00;
+  border: 1px solid #ffe28a;
+  border-radius: 6px;
+  padding: 4px 10px;
+  margin-bottom: 16px;
+}
+
+.filtros {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.filtros input,
+.filtros select {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.grid-produtos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.card-produto {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  text-decoration: none;
+  color: var(--ink);
+  display: block;
+}
+
+.card-produto img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  background: #f7f5fa;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.card-produto .categoria {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--purple-mid);
+}
+
+.card-produto h3 {
+  font-size: 14px;
+  margin: 4px 0 0;
+}
+
+.paginacao {
+  display: flex;
+  gap: 8px;
+  margin-top: 24px;
+  align-items: center;
+}
+
+.btn {
+  display: inline-block;
+  background: var(--purple-mid);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.form-orcamento {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 480px;
+}
+
+.form-orcamento input,
+.form-orcamento textarea {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.carrinho-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}

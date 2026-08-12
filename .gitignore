@@ -1,0 +1,18 @@
+# Environment variables (segredos - nunca commitar)
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# Misc
+.DS_Store
+*.log
+.vercel
