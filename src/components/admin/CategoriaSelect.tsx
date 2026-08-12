@@ -2,17 +2,16 @@
 
 import { useTransition } from "react";
 import { atualizarCategoriaManual } from "@/app/admin/(protegido)/actions";
-import { listarCategorias } from "@/lib/categorize";
 
 interface CategoriaSelectProps {
   produtoId: number;
   categoriaManualAtual: string | null;
   categoriaAutomatica: string;
+  categorias: string[];
 }
 
-export function CategoriaSelect({ produtoId, categoriaManualAtual, categoriaAutomatica }: CategoriaSelectProps) {
+export function CategoriaSelect({ produtoId, categoriaManualAtual, categoriaAutomatica, categorias }: CategoriaSelectProps) {
   const [pending, startTransition] = useTransition();
-  const categorias = listarCategorias();
 
   return (
     <select

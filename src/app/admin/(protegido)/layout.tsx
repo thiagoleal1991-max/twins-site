@@ -25,6 +25,7 @@ export default function AdminProtegidoLayout({ children }: { children: React.Rea
       >
         <nav style={{ display: "flex", gap: 20, fontSize: 14 }}>
           <Link href="/admin">Produtos</Link>
+          <Link href="/admin/categorias">Categorias</Link>
           <Link href="/admin/banners">Banners</Link>
         </nav>
         <LogoutButton />

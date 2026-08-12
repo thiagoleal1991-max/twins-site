@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-auth";
-import { listarCategorias } from "@/lib/categorize";
+import { listarNomesCategorias } from "@/lib/categories";
 import { idsDaFamilia } from "@/lib/products";
 
 function revalidarPublico() {
@@ -15,7 +15,7 @@ export async function atualizarCategoriaManual(produtoId: number, categoria: str
   requireAdmin();
 
   const valor = categoria.trim();
-  const categoriaValida = valor === "" || listarCategorias().includes(valor);
+  const categoriaValida = valor === "" || (await listarNomesCategorias()).includes(valor);
   if (!categoriaValida) throw new Error("Categoria inválida");
 
   const ids = await idsDaFamilia(produtoId);

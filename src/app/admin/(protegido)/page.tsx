@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listarProdutosAdmin, codigoExibicao } from "@/lib/products";
+import { listarNomesCategorias } from "@/lib/categories";
 import { alternarOculto, alternarDestaque, alternarMaisVendido } from "./actions";
 import { ToggleFlag } from "@/components/admin/ToggleFlag";
 import { CategoriaSelect } from "@/components/admin/CategoriaSelect";
@@ -13,13 +14,16 @@ interface AdminPageProps {
 export default async function AdminPage({ searchParams }: AdminPageProps) {
   const page = searchParams.page ? Number(searchParams.page) : 1;
 
-  const { produtos, totalItens, totalPaginas, paginaAtual } = await listarProdutosAdmin({
-    busca: searchParams.busca,
-    apenasIncompletos: searchParams.incompletos === "1",
-    apenasCompletos: searchParams.completos === "1",
-    apenasOcultos: searchParams.ocultos === "1",
-    page,
-  });
+  const [{ produtos, totalItens, totalPaginas, paginaAtual }, categorias] = await Promise.all([
+    listarProdutosAdmin({
+      busca: searchParams.busca,
+      apenasIncompletos: searchParams.incompletos === "1",
+      apenasCompletos: searchParams.completos === "1",
+      apenasOcultos: searchParams.ocultos === "1",
+      page,
+    }),
+    listarNomesCategorias(),
+  ]);
 
   function buildLink(
     overrides: Partial<{
@@ -121,6 +125,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                     produtoId={p.id}
                     categoriaManualAtual={p.categoriaManual}
                     categoriaAutomatica={p.categoria}
+                    categorias={categorias}
                   />
                 </td>
                 <td style={{ padding: 8 }}>
