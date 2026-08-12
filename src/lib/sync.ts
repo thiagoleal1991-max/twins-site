@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { fetchXbzProdutos, type XbzProduto } from "./xbz";
 import { categorizar } from "./categorize";
@@ -9,19 +10,28 @@ export interface SyncResult {
   totalDeactivated: number;
 }
 
+// Catálogo real da XBZ tem 16 mil+ produtos (confirmado em teste manual).
+// Gravar um por um estourava o limite de tempo da função na Vercel — em
+// lotes de 500 via SQL bruto (INSERT ... ON CONFLICT), a sincronização
+// inteira roda em segundos em vez de minutos.
+const TAMANHO_LOTE = 500;
+
 /**
  * Sincroniza o catálogo local com a XBZ.
  *
- * Estratégia: uma única chamada a /ProdutosListar sem `busca` (deve trazer o
- * catálogo completo, a confirmar no primeiro dry run real — ver README).
- * Produtos que já existem no banco mas não vieram nesta sincronização são
- * marcados como `ativo: false` (não deletados, pra manter histórico de
- * orçamentos antigos íntegro).
+ * Estratégia: uma única chamada a /ProdutosListar sem `busca` — confirmado
+ * em teste manual que retorna o catálogo completo (16.178 produtos, sem
+ * paginação). Produtos que já existem no banco mas não vieram nesta
+ * sincronização são marcados como `ativo: false` (não deletados, pra manter
+ * histórico de orçamentos antigos íntegro) — comparando o timestamp
+ * `syncedAt` em vez de guardar uma lista gigante de IDs em memória.
  */
 export async function sincronizarProdutosXbz(): Promise<SyncResult> {
   const log = await prisma.syncLog.create({
     data: { status: "running" },
   });
+
+  const inicioSync = new Date();
 
   try {
     const produtos: XbzProduto[] = await fetchXbzProdutos();
@@ -29,47 +39,19 @@ export async function sincronizarProdutosXbz(): Promise<SyncResult> {
     let totalCreated = 0;
     let totalUpdated = 0;
 
-    const idsVistos: number[] = [];
-
-    for (const produto of produtos) {
-      idsVistos.push(produto.id);
-
-      const dados = {
-        xbzId: produto.id,
-        codigoXbz: produto.codigoXbz,
-        codigoComposto: produto.codigoComposto,
-        codigoAmigavel: produto.codigoAmigavel,
-        nome: produto.nome,
-        descricao: produto.descricao,
-        siteLink: produto.siteLink,
-        imageLink: produto.imageLink,
-        xbzCadastroData: produto.cadastroData ? new Date(produto.cadastroData) : null,
-        categoria: categorizar(`${produto.nome ?? ""} ${produto.descricao}`),
-        ativo: true,
-        syncedAt: new Date(),
-      };
-
-      const resultado = await prisma.product.upsert({
-        where: { xbzId: produto.id },
-        create: dados,
-        update: dados,
-      });
-
-      // Prisma não diz diretamente se foi create ou update no upsert,
-      // então comparamos createdAt/updatedAt (mesma instrução, primeira
-      // gravação tem os dois timestamps praticamente iguais).
-      if (resultado.createdAt.getTime() === resultado.updatedAt.getTime()) {
-        totalCreated++;
-      } else {
-        totalUpdated++;
-      }
+    for (let i = 0; i < produtos.length; i += TAMANHO_LOTE) {
+      const lote = produtos.slice(i, i + TAMANHO_LOTE);
+      const { criados, atualizados } = await upsertLote(lote, inicioSync);
+      totalCreated += criados;
+      totalUpdated += atualizados;
     }
 
-    // Desativa produtos que estavam no banco mas sumiram desta sincronização
+    // Tudo que não foi tocado nesta sincronização (syncedAt ficou "velho")
+    // sumiu do catálogo da XBZ — desativa em vez de deletar.
     const { count: totalDeactivated } = await prisma.product.updateMany({
       where: {
         ativo: true,
-        xbzId: { notIn: idsVistos },
+        syncedAt: { lt: inicioSync },
       },
       data: { ativo: false },
     });
@@ -98,4 +80,54 @@ export async function sincronizarProdutosXbz(): Promise<SyncResult> {
     });
     throw error;
   }
+}
+
+async function upsertLote(lote: XbzProduto[], syncedAt: Date): Promise<{ criados: number; atualizados: number }> {
+  const linhas = lote.map(
+    (p) => Prisma.sql`(
+      ${p.id},
+      ${p.codigoXbz},
+      ${p.codigoComposto},
+      ${p.codigoAmigavel},
+      ${p.nome},
+      ${p.descricao},
+      ${p.siteLink},
+      ${p.imageLink},
+      ${p.cadastroData ? new Date(p.cadastroData) : null},
+      ${categorizar(`${p.nome ?? ""} ${p.descricao}`)},
+      true,
+      ${syncedAt},
+      now(),
+      now()
+    )`,
+  );
+
+  // O truque "xmax = 0" é como o Postgres deixa a gente saber, depois de um
+  // INSERT ... ON CONFLICT, se cada linha foi inserida (nova) ou atualizada
+  // (já existia) — sem precisar de uma segunda consulta.
+  const resultado = await prisma.$queryRaw<{ inserted: boolean }[]>`
+    INSERT INTO "Product" (
+      "xbzId", "codigoXbz", "codigoComposto", "codigoAmigavel", "nome", "descricao",
+      "siteLink", "imageLink", "xbzCadastroData", "categoria", "ativo", "syncedAt",
+      "createdAt", "updatedAt"
+    )
+    VALUES ${Prisma.join(linhas)}
+    ON CONFLICT ("xbzId") DO UPDATE SET
+      "codigoXbz" = EXCLUDED."codigoXbz",
+      "codigoComposto" = EXCLUDED."codigoComposto",
+      "codigoAmigavel" = EXCLUDED."codigoAmigavel",
+      "nome" = EXCLUDED."nome",
+      "descricao" = EXCLUDED."descricao",
+      "siteLink" = EXCLUDED."siteLink",
+      "imageLink" = EXCLUDED."imageLink",
+      "xbzCadastroData" = EXCLUDED."xbzCadastroData",
+      "categoria" = EXCLUDED."categoria",
+      "ativo" = true,
+      "syncedAt" = EXCLUDED."syncedAt",
+      "updatedAt" = now()
+    RETURNING (xmax = 0) AS inserted
+  `;
+
+  const criados = resultado.filter((r) => r.inserted).length;
+  return { criados, atualizados: resultado.length - criados };
 }
