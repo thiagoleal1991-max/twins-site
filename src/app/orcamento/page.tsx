@@ -52,10 +52,12 @@ export default function OrcamentoPage() {
 
   if (linkWhatsapp) {
     return (
-      <main className="container">
+      <main className="wrap" style={{ paddingTop: 60, paddingBottom: 80 }}>
         <h1>Orçamento enviado! 🎉</h1>
-        <p>Recebemos seu pedido de orçamento. Finalize falando com nosso time no WhatsApp:</p>
-        <a className="btn" href={linkWhatsapp} target="_blank" rel="noreferrer">
+        <p style={{ color: "var(--cream-dim)", marginTop: 12, marginBottom: 24 }}>
+          Recebemos seu pedido de orçamento. Finalize falando com nosso time no WhatsApp:
+        </p>
+        <a className="btn-wpp" href={linkWhatsapp} target="_blank" rel="noreferrer">
           Continuar no WhatsApp
         </a>
       </main>
@@ -63,12 +65,14 @@ export default function OrcamentoPage() {
   }
 
   return (
-    <main className="container">
-      <span className="badge-dev">🚧 Layout provisório</span>
+    <main className="wrap" style={{ paddingTop: 40, paddingBottom: 80 }}>
+      <span className="badge-dev">🚧 Layout provisório — banco/carrinho já reais</span>
       <h1>Meu orçamento</h1>
 
       {items.length === 0 ? (
-        <p>Nenhum produto adicionado ainda. Volte ao catálogo e escolha alguns itens.</p>
+        <p style={{ color: "var(--cream-dim)", marginTop: 12 }}>
+          Nenhum produto adicionado ainda. Volte ao catálogo e escolha alguns itens.
+        </p>
       ) : (
         <div style={{ marginBottom: 24 }}>
           {items.map((item) => (
@@ -80,9 +84,16 @@ export default function OrcamentoPage() {
                   min={1}
                   value={item.quantidade}
                   onChange={(e) => atualizarQuantidade(item.productId, Number(e.target.value))}
-                  style={{ width: 60, padding: 6 }}
+                  style={{
+                    width: 60,
+                    padding: 6,
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid var(--line)",
+                    borderRadius: 6,
+                    color: "var(--cream)",
+                  }}
                 />
-                <button type="button" onClick={() => remover(item.productId)}>
+                <button type="button" className="btn-ghost" onClick={() => remover(item.productId)}>
                   Remover
                 </button>
               </div>
@@ -98,8 +109,8 @@ export default function OrcamentoPage() {
           <input name="contatoFone" placeholder="Telefone / WhatsApp" required />
           <input name="contatoEmail" type="email" placeholder="E-mail (opcional)" />
           <textarea name="observacoes" placeholder="Observações (opcional)" rows={3} />
-          {erro && <p style={{ color: "crimson" }}>{erro}</p>}
-          <button className="btn" type="submit" disabled={enviando}>
+          {erro && <p style={{ color: "#ff8080" }}>{erro}</p>}
+          <button className="btn-wpp" style={{ border: "none" }} type="submit" disabled={enviando}>
             {enviando ? "Enviando..." : "Solicitar orçamento"}
           </button>
         </form>

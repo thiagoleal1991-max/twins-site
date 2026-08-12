@@ -29,13 +29,20 @@ export function AddToQuoteButton({ productId, codigoXbz, descricao, imageLink }:
         min={1}
         value={quantidade}
         onChange={(e) => setQuantidade(Math.max(1, Number(e.target.value)))}
-        style={{ width: 70, padding: 8, border: "1px solid #e4dfee", borderRadius: 8 }}
+        style={{
+          width: 70,
+          padding: 8,
+          border: "1px solid var(--line)",
+          borderRadius: 8,
+          background: "rgba(255,255,255,0.04)",
+          color: "var(--cream)",
+        }}
       />
-      <button className="btn" onClick={handleAdicionar}>
-        Adicionar ao orçamento
+      <button className="btn-wpp" style={{ border: "none" }} onClick={handleAdicionar} disabled={adicionado}>
+        {adicionado ? "Adicionado ✓" : "Adicionar ao orçamento"}
       </button>
       {adicionado && (
-        <button className="btn" style={{ background: "#3b1560" }} onClick={() => router.push("/orcamento")}>
+        <button className="btn-ghost" onClick={() => router.push("/orcamento")}>
           Ver orçamento →
         </button>
       )}

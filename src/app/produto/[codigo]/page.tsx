@@ -1,6 +1,9 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { buscarProdutoPorCodigo } from "@/lib/products";
 import { AddToQuoteButton } from "@/components/AddToQuoteButton";
+import { QuoteBar } from "@/components/QuoteBar";
+import { ProductImage } from "@/components/ProductImage";
 
 export const dynamic = "force-dynamic";
 
@@ -14,32 +17,38 @@ export default async function ProdutoPage({ params }: ProdutoPageProps) {
   if (!produto) notFound();
 
   return (
-    <main className="container">
-      <span className="badge-dev">🚧 Layout provisório</span>
-      <div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: 32 }}>
-        {produto.imageLink && (
-          <img
-            src={produto.imageLink}
-            alt={produto.descricao}
-            style={{ width: "100%", background: "#f7f5fa", borderRadius: 10 }}
-          />
-        )}
-        <div>
-          <span className="categoria">{produto.categoria}</span>
-          <h1>{produto.descricao}</h1>
-          <p style={{ color: "#666", fontSize: 13 }}>Código: {produto.codigoXbz}</p>
-          <p>
-            Preço sob consulta — a Twins monta um orçamento personalizado conforme quantidade,
-            personalização e prazo.
-          </p>
-          <AddToQuoteButton
-            productId={produto.id}
-            codigoXbz={produto.codigoXbz}
-            descricao={produto.descricao}
-            imageLink={produto.imageLink}
-          />
+    <>
+      <div className="wrap" style={{ paddingTop: 32, paddingBottom: 60 }}>
+        <Link href="/catalogo" style={{ fontSize: 13.5, color: "var(--muted)" }}>
+          ← Voltar ao catálogo
+        </Link>
+
+        <div style={{ display: "grid", gridTemplateColumns: "360px 1fr", gap: 40, marginTop: 20 }}>
+          <div className="product-thumb" style={{ borderRadius: "var(--radius)" }}>
+            <span className="product-cat-badge">{produto.categoria}</span>
+            {produto.imageLink && <ProductImage src={produto.imageLink} alt={produto.descricao} />}
+          </div>
+
+          <div>
+            <h1 style={{ fontSize: "clamp(24px, 3vw, 34px)" }}>{produto.descricao}</h1>
+            <p className="product-sku" style={{ marginTop: 8 }}>
+              SKU {produto.codigoXbz}
+            </p>
+            <p style={{ color: "var(--cream-dim)", marginTop: 20, maxWidth: 480 }}>
+              Preço sob consulta — a Twins monta um orçamento personalizado conforme quantidade, personalização e
+              prazo de entrega.
+            </p>
+            <AddToQuoteButton
+              productId={produto.id}
+              codigoXbz={produto.codigoXbz}
+              descricao={produto.descricao}
+              imageLink={produto.imageLink}
+            />
+          </div>
         </div>
       </div>
-    </main>
+
+      <QuoteBar />
+    </>
   );
 }

@@ -4,12 +4,21 @@ import type { Prisma } from "@prisma/client";
 const PAGE_SIZE_PADRAO = 24;
 const PAGE_SIZE_MAXIMO = 60;
 
+export type OrdenacaoProdutos = "recentes" | "nome" | "categoria";
+
 export interface ListarProdutosParams {
   busca?: string;
   categoria?: string;
   page?: number;
   pageSize?: number;
+  sort?: OrdenacaoProdutos;
 }
+
+const ORDER_BY: Record<OrdenacaoProdutos, Prisma.ProductOrderByWithRelationInput> = {
+  recentes: { syncedAt: "desc" },
+  nome: { descricao: "asc" },
+  categoria: { categoria: "asc" },
+};
 
 export interface ListarProdutosResultado {
   produtos: Awaited<ReturnType<typeof prisma.product.findMany>>;
@@ -38,7 +47,7 @@ export async function listarProdutos(params: ListarProdutosParams): Promise<List
   const [produtos, totalItens] = await Promise.all([
     prisma.product.findMany({
       where,
-      orderBy: { descricao: "asc" },
+      orderBy: ORDER_BY[params.sort ?? "nome"],
       skip: (page - 1) * pageSize,
       take: pageSize,
     }),
