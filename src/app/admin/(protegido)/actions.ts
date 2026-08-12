@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-auth";
 import { listarCategorias } from "@/lib/categorize";
+import { idsDaFamilia } from "@/lib/products";
 
 function revalidarPublico() {
   revalidatePath("/catalogo");
@@ -17,8 +18,9 @@ export async function atualizarCategoriaManual(produtoId: number, categoria: str
   const categoriaValida = valor === "" || listarCategorias().includes(valor);
   if (!categoriaValida) throw new Error("Categoria inválida");
 
-  await prisma.product.update({
-    where: { id: produtoId },
+  const ids = await idsDaFamilia(produtoId);
+  await prisma.product.updateMany({
+    where: { id: { in: ids } },
     data: { categoriaManual: valor || null },
   });
 
@@ -28,21 +30,24 @@ export async function atualizarCategoriaManual(produtoId: number, categoria: str
 
 export async function alternarOculto(produtoId: number, valor: boolean) {
   requireAdmin();
-  await prisma.product.update({ where: { id: produtoId }, data: { ocultoManualmente: valor } });
+  const ids = await idsDaFamilia(produtoId);
+  await prisma.product.updateMany({ where: { id: { in: ids } }, data: { ocultoManualmente: valor } });
   revalidatePath("/admin");
   revalidarPublico();
 }
 
 export async function alternarDestaque(produtoId: number, valor: boolean) {
   requireAdmin();
-  await prisma.product.update({ where: { id: produtoId }, data: { destaque: valor } });
+  const ids = await idsDaFamilia(produtoId);
+  await prisma.product.updateMany({ where: { id: { in: ids } }, data: { destaque: valor } });
   revalidatePath("/admin");
   revalidarPublico();
 }
 
 export async function alternarMaisVendido(produtoId: number, valor: boolean) {
   requireAdmin();
-  await prisma.product.update({ where: { id: produtoId }, data: { maisVendido: valor } });
+  const ids = await idsDaFamilia(produtoId);
+  await prisma.product.updateMany({ where: { id: { in: ids } }, data: { maisVendido: valor } });
   revalidatePath("/admin");
   revalidarPublico();
 }

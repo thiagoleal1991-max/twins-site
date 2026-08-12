@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { listarProdutos, type OrdenacaoProdutos, type Vitrine } from "@/lib/products";
+import { listarProdutos, codigoExibicao, type OrdenacaoProdutos, type Vitrine } from "@/lib/products";
 import { listarCategorias } from "@/lib/categorize";
 import { listarBannersAtivos } from "@/lib/banners";
 import { AddToQuoteChip } from "@/components/AddToQuoteChip";
@@ -169,13 +169,14 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
                   </Link>
                   <p>{produto.descricao}</p>
                   <div className="product-sku">
-                    SKU {produto.codigoXbz}
+                    Código {codigoExibicao(produto)}
                     {produto.variantes > 1 && ` · ${produto.variantes} cores`}
                   </div>
                   <div className="product-actions">
                     <AddToQuoteChip
                       productId={produto.id}
                       codigoXbz={produto.codigoXbz}
+                      codigoExibicao={codigoExibicao(produto)}
                       descricao={produto.nome ?? produto.descricao}
                       imageLink={produto.imageLink}
                     />

@@ -34,9 +34,11 @@ export function CategoriaSelect({ produtoId, categoriaManualAtual, categoriaAuto
         maxWidth: 220,
       }}
     >
-      <option value="">Automática: {categoriaAutomatica}</option>
+      <option value="" style={{ background: "#1a0f28", color: "#F5F1EA" }}>
+        Automática: {categoriaAutomatica}
+      </option>
       {categorias.map((c) => (
-        <option key={c} value={c}>
+        <option key={c} value={c} style={{ background: "#1a0f28", color: "#F5F1EA" }}>
           {c}
         </option>
       ))}

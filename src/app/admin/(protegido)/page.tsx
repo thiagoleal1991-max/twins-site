@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { listarProdutosAdmin } from "@/lib/products";
+import { listarProdutosAdmin, codigoExibicao } from "@/lib/products";
 import { alternarOculto, alternarDestaque, alternarMaisVendido } from "./actions";
 import { ToggleFlag } from "@/components/admin/ToggleFlag";
 import { CategoriaSelect } from "@/components/admin/CategoriaSelect";
@@ -50,13 +50,15 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   return (
     <main className="wrap" style={{ paddingTop: 32, paddingBottom: 60 }}>
       <h1 style={{ fontSize: 24, marginBottom: 8 }}>Produtos</h1>
-      <p style={{ color: "var(--muted)", fontSize: 13.5, marginBottom: 20 }}>{totalItens} produto(s) no banco</p>
+      <p style={{ color: "var(--muted)", fontSize: 13.5, marginBottom: 20 }}>
+        {totalItens} produto(s) — já agrupados por cor (cada linha pode ter várias variações)
+      </p>
 
       <form className="filtros" action="/admin" method="get" style={{ marginBottom: 16 }}>
         <input
           type="text"
           name="busca"
-          placeholder="Buscar por nome, descrição ou SKU..."
+          placeholder="Buscar por nome, descrição ou código..."
           defaultValue={searchParams.busca ?? ""}
         />
         <button className="btn" type="submit">
@@ -96,7 +98,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           <thead>
             <tr style={{ textAlign: "left", borderBottom: "1px solid var(--line)" }}>
               <th style={{ padding: 8 }}>Produto</th>
-              <th style={{ padding: 8 }}>SKU</th>
+              <th style={{ padding: 8 }}>Código</th>
               <th style={{ padding: 8 }}>Categoria</th>
               <th style={{ padding: 8 }}>Sinalizadores</th>
             </tr>
@@ -107,10 +109,13 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 <td style={{ padding: 8, maxWidth: 320 }}>
                   <div style={{ fontWeight: 600 }}>
                     {p.nome || <span style={{ color: "#ff8080" }}>(sem nome)</span>}
+                    {p.variantes > 1 && (
+                      <span style={{ color: "var(--muted)", fontWeight: 400 }}> · {p.variantes} cores</span>
+                    )}
                   </div>
                   {!p.imageLink && <div style={{ color: "#ff8080", fontSize: 12 }}>⚠ sem imagem</div>}
                 </td>
-                <td style={{ padding: 8, fontFamily: "var(--mono)", fontSize: 12 }}>{p.codigoXbz}</td>
+                <td style={{ padding: 8, fontFamily: "var(--mono)", fontSize: 12 }}>{codigoExibicao(p)}</td>
                 <td style={{ padding: 8 }}>
                   <CategoriaSelect
                     produtoId={p.id}
@@ -129,6 +134,11 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                       action={alternarMaisVendido}
                     />
                   </div>
+                  {p.variantes > 1 && (
+                    <div style={{ color: "var(--muted)", fontSize: 11, marginTop: 4 }}>
+                      Aplica nas {p.variantes} cores juntas
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}
