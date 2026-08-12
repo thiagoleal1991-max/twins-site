@@ -144,6 +144,7 @@ export async function listarVariantes(codigoAmigavel: string | null) {
 export interface ListarProdutosAdminParams {
   busca?: string;
   apenasIncompletos?: boolean;
+  apenasCompletos?: boolean;
   apenasOcultos?: boolean;
   page?: number;
   pageSize?: number;
@@ -167,6 +168,16 @@ export async function listarProdutosAdmin(params: ListarProdutosAdminParams) {
   if (params.apenasIncompletos) {
     condicoes.push({
       OR: [{ nome: null }, { nome: "" }, { imageLink: null }, { imageLink: "" }],
+    });
+  }
+  if (params.apenasCompletos) {
+    condicoes.push({
+      AND: [
+        { nome: { not: null } },
+        { NOT: { nome: "" } },
+        { imageLink: { not: null } },
+        { NOT: { imageLink: "" } },
+      ],
     });
   }
   if (params.apenasOcultos) {
