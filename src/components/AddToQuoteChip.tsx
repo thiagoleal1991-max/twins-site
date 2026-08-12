@@ -6,13 +6,14 @@ import { useCart } from "@/lib/cart-context";
 interface AddToQuoteChipProps {
   productId: number;
   codigoXbz: string;
+  codigoExibicao: string;
   descricao: string;
   imageLink: string | null;
 }
 
 // Botão "+ Orçamento" usado nos cards do grid do catálogo — sempre adiciona
 // 1 unidade (a quantidade é ajustável depois, na página /orcamento).
-export function AddToQuoteChip({ productId, codigoXbz, descricao, imageLink }: AddToQuoteChipProps) {
+export function AddToQuoteChip({ productId, codigoXbz, codigoExibicao, descricao, imageLink }: AddToQuoteChipProps) {
   const { items, adicionar } = useCart();
   const [clicado, setClicado] = useState(false);
 
@@ -24,7 +25,7 @@ export function AddToQuoteChip({ productId, codigoXbz, descricao, imageLink }: A
       className={`btn-add${jaNoCarrinho ? " added" : ""}`}
       disabled={jaNoCarrinho}
       onClick={() => {
-        adicionar({ productId, codigoXbz, descricao, imageLink }, 1);
+        adicionar({ productId, codigoXbz, codigoExibicao, descricao, imageLink }, 1);
         setClicado(true);
       }}
     >

@@ -39,7 +39,7 @@ export default function OrcamentoPage() {
         return;
       }
 
-      const listaItens = items.map((i) => `• ${i.quantidade}x ${i.descricao} (${i.codigoXbz})`).join("\n");
+      const listaItens = items.map((i) => `• ${i.quantidade}x ${i.descricao} (código ${i.codigoExibicao})`).join("\n");
       const mensagem = `Olá! Gostaria de um orçamento (pedido #${data.id}):\n\n${listaItens}\n\nEmpresa: ${body.empresa}`;
       setLinkWhatsapp(`https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(mensagem)}`);
       limpar();

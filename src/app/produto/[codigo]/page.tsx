@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { buscarProdutoPorCodigo, listarVariantes } from "@/lib/products";
+import { buscarProdutoPorCodigo, listarVariantes, codigoExibicao } from "@/lib/products";
 import { AddToQuoteButton } from "@/components/AddToQuoteButton";
 import { QuoteBar } from "@/components/QuoteBar";
 import { ProductImage } from "@/components/ProductImage";
@@ -34,7 +34,7 @@ export default async function ProdutoPage({ params }: ProdutoPageProps) {
           <div>
             <h1 style={{ fontSize: "clamp(24px, 3vw, 34px)" }}>{produto.nome ?? produto.descricao}</h1>
             <p className="product-sku" style={{ marginTop: 8 }}>
-              SKU {produto.codigoXbz}
+              Código {codigoExibicao(produto)}
             </p>
             <p style={{ color: "var(--cream-dim)", marginTop: 20, maxWidth: 480 }}>{produto.descricao}</p>
 
@@ -64,6 +64,7 @@ export default async function ProdutoPage({ params }: ProdutoPageProps) {
             <AddToQuoteButton
               productId={produto.id}
               codigoXbz={produto.codigoXbz}
+              codigoExibicao={codigoExibicao(produto)}
               descricao={produto.nome ?? produto.descricao}
               imageLink={produto.imageLink}
             />

@@ -7,18 +7,19 @@ import { useCart } from "@/lib/cart-context";
 interface AddToQuoteButtonProps {
   productId: number;
   codigoXbz: string;
+  codigoExibicao: string;
   descricao: string;
   imageLink: string | null;
 }
 
-export function AddToQuoteButton({ productId, codigoXbz, descricao, imageLink }: AddToQuoteButtonProps) {
+export function AddToQuoteButton({ productId, codigoXbz, codigoExibicao, descricao, imageLink }: AddToQuoteButtonProps) {
   const { adicionar } = useCart();
   const [quantidade, setQuantidade] = useState(1);
   const [adicionado, setAdicionado] = useState(false);
   const router = useRouter();
 
   function handleAdicionar() {
-    adicionar({ productId, codigoXbz, descricao, imageLink }, quantidade);
+    adicionar({ productId, codigoXbz, codigoExibicao, descricao, imageLink }, quantidade);
     setAdicionado(true);
   }
 

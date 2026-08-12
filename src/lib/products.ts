@@ -4,6 +4,20 @@ import { Prisma } from "@prisma/client";
 const PAGE_SIZE_PADRAO = 24;
 const PAGE_SIZE_MAXIMO = 60;
 
+/**
+ * Código "humano" do produto, o mesmo que aparece no site da XBZ (ex:
+ * xbzbrindes.com.br/06520) e que a Twins usa pra comprar/pesquisar —
+ * diferente do `codigoXbz` (ID interno tipo "X000019", só usado por nós
+ * pra identificar a linha no banco/rota, sem relação com o código real).
+ */
+export function codigoExibicao(produto: {
+  codigoAmigavel: string | null;
+  codigoComposto: string | null;
+  codigoXbz: string;
+}): string {
+  return produto.codigoAmigavel || produto.codigoComposto || produto.codigoXbz;
+}
+
 export type OrdenacaoProdutos = "recentes" | "nome" | "categoria";
 export type Vitrine = "destaques" | "mais-vendidos";
 
@@ -150,58 +164,110 @@ export interface ListarProdutosAdminParams {
   pageSize?: number;
 }
 
+export interface ProdutoAdminListado {
+  id: number;
+  xbzId: number;
+  codigoXbz: string;
+  codigoComposto: string | null;
+  codigoAmigavel: string | null;
+  nome: string | null;
+  descricao: string;
+  imageLink: string | null;
+  categoria: string;
+  categoriaManual: string | null;
+  ocultoManualmente: boolean;
+  destaque: boolean;
+  maisVendido: boolean;
+  variantes: number;
+}
+
+interface ProdutoAdminListadoRaw extends Omit<ProdutoAdminListado, "variantes"> {
+  variantes: bigint;
+}
+
+// Mesma ideia do catálogo público: 1 linha por família de produto (cores
+// agrupadas), pra não poluir a lista com vários itens idênticos. Ao
+// escolher o representante de cada família, prioriza um que já esteja
+// completo (nome + foto), pra não esconder um item OK atrás de uma
+// variação de cor incompleta.
+const REPRESENTANTE_COMPLETO_SQL = Prisma.sql`
+  ("nome" IS NOT NULL AND trim("nome") != '' AND "imageLink" IS NOT NULL AND trim("imageLink") != '')
+`;
+
 export async function listarProdutosAdmin(params: ListarProdutosAdminParams) {
   const page = Math.max(1, params.page ?? 1);
   const pageSize = Math.min(100, Math.max(1, params.pageSize ?? 50));
+  const offset = (page - 1) * pageSize;
 
-  const condicoes: Prisma.ProductWhereInput[] = [];
+  const filtroBusca = params.busca
+    ? Prisma.sql`AND (
+        "nome" ILIKE ${"%" + params.busca + "%"}
+        OR "descricao" ILIKE ${"%" + params.busca + "%"}
+        OR "codigoXbz" ILIKE ${"%" + params.busca + "%"}
+        OR "codigoAmigavel" ILIKE ${"%" + params.busca + "%"}
+      )`
+    : Prisma.empty;
 
-  if (params.busca) {
-    condicoes.push({
-      OR: [
-        { nome: { contains: params.busca, mode: "insensitive" } },
-        { descricao: { contains: params.busca, mode: "insensitive" } },
-        { codigoXbz: { contains: params.busca, mode: "insensitive" } },
-      ],
-    });
-  }
-  if (params.apenasIncompletos) {
-    condicoes.push({
-      OR: [{ nome: null }, { nome: "" }, { imageLink: null }, { imageLink: "" }],
-    });
-  }
-  if (params.apenasCompletos) {
-    condicoes.push({
-      AND: [
-        { nome: { not: null } },
-        { NOT: { nome: "" } },
-        { imageLink: { not: null } },
-        { NOT: { imageLink: "" } },
-      ],
-    });
-  }
-  if (params.apenasOcultos) {
-    condicoes.push({ ocultoManualmente: true });
-  }
+  const filtroPosGrupo = Prisma.sql`
+    1=1
+    ${params.apenasCompletos ? Prisma.sql`AND ${REPRESENTANTE_COMPLETO_SQL}` : Prisma.empty}
+    ${params.apenasIncompletos ? Prisma.sql`AND NOT ${REPRESENTANTE_COMPLETO_SQL}` : Prisma.empty}
+    ${params.apenasOcultos ? Prisma.sql`AND "ocultoManualmente" = true` : Prisma.empty}
+  `;
 
-  const where: Prisma.ProductWhereInput = condicoes.length ? { AND: condicoes } : {};
-
-  const [produtos, totalItens] = await Promise.all([
-    prisma.product.findMany({
-      where,
-      orderBy: [{ nome: "asc" }, { id: "asc" }],
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-    }),
-    prisma.product.count({ where }),
+  const [produtosRaw, totalRows] = await Promise.all([
+    prisma.$queryRaw<ProdutoAdminListadoRaw[]>`
+      SELECT * FROM (
+        SELECT DISTINCT ON (COALESCE("codigoAmigavel", "codigoXbz"))
+          "id", "xbzId", "codigoXbz", "codigoComposto", "codigoAmigavel", "nome",
+          "descricao", "imageLink", "categoria", "categoriaManual", "ocultoManualmente",
+          "destaque", "maisVendido",
+          COUNT(*) OVER (PARTITION BY COALESCE("codigoAmigavel", "codigoXbz")) AS variantes
+        FROM "Product"
+        WHERE 1=1 ${filtroBusca}
+        ORDER BY COALESCE("codigoAmigavel", "codigoXbz"), ${REPRESENTANTE_COMPLETO_SQL} DESC, "id" ASC
+      ) AS familias
+      WHERE ${filtroPosGrupo}
+      ORDER BY "nome" ASC NULLS LAST, "id" ASC
+      LIMIT ${pageSize} OFFSET ${offset}
+    `,
+    prisma.$queryRaw<{ total: bigint }[]>`
+      SELECT COUNT(*) AS total FROM (
+        SELECT DISTINCT ON (COALESCE("codigoAmigavel", "codigoXbz"))
+          "nome", "imageLink", "ocultoManualmente"
+        FROM "Product"
+        WHERE 1=1 ${filtroBusca}
+        ORDER BY COALESCE("codigoAmigavel", "codigoXbz"), ${REPRESENTANTE_COMPLETO_SQL} DESC, "id" ASC
+      ) AS familias
+      WHERE ${filtroPosGrupo}
+    `,
   ]);
 
+  const totalItens = Number(totalRows[0]?.total ?? 0);
+
   return {
-    produtos,
+    produtos: produtosRaw.map((p) => ({ ...p, variantes: Number(p.variantes) })),
     totalItens,
     totalPaginas: Math.max(1, Math.ceil(totalItens / pageSize)),
     paginaAtual: page,
   };
+}
+
+/** IDs de todas as variações (cores) da mesma família — usado pelas Server
+ * Actions do /admin pra aplicar uma mudança (categoria, ocultar, destaque)
+ * na família inteira de uma vez, não só na variação que aparece na lista. */
+export async function idsDaFamilia(produtoId: number): Promise<number[]> {
+  const produto = await prisma.product.findUnique({
+    where: { id: produtoId },
+    select: { codigoAmigavel: true },
+  });
+  if (!produto?.codigoAmigavel) return [produtoId];
+
+  const variantes = await prisma.product.findMany({
+    where: { codigoAmigavel: produto.codigoAmigavel },
+    select: { id: true },
+  });
+  return variantes.map((v) => v.id);
 }
 
 export async function listarCategoriasComContagem() {

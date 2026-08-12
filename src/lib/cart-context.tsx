@@ -5,6 +5,9 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 export interface CartItem {
   productId: number;
   codigoXbz: string;
+  /** Código "humano" da XBZ (família, ex: 06520) — o que a Twins usa pra
+   * comprar de verdade, diferente do codigoXbz (ID interno da nossa rota). */
+  codigoExibicao: string;
   descricao: string;
   imageLink: string | null;
   quantidade: number;
