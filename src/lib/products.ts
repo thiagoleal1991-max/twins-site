@@ -16,7 +16,7 @@ export interface ListarProdutosParams {
 
 const ORDER_BY: Record<OrdenacaoProdutos, Prisma.ProductOrderByWithRelationInput> = {
   recentes: { syncedAt: "desc" },
-  nome: { descricao: "asc" },
+  nome: { nome: "asc" },
   categoria: { categoria: "asc" },
 };
 
@@ -36,10 +36,10 @@ export async function listarProdutos(params: ListarProdutosParams): Promise<List
     ...(params.categoria ? { categoria: params.categoria } : {}),
     ...(params.busca
       ? {
-          descricao: {
-            contains: params.busca,
-            mode: "insensitive" as const,
-          },
+          OR: [
+            { nome: { contains: params.busca, mode: "insensitive" as const } },
+            { descricao: { contains: params.busca, mode: "insensitive" as const } },
+          ],
         }
       : {}),
   };

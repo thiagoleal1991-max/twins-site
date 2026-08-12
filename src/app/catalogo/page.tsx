@@ -114,19 +114,22 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
                 <Link href={`/produto/${produto.codigoXbz}`}>
                   <div className="product-thumb">
                     <span className="product-cat-badge">{produto.categoria}</span>
-                    {produto.imageLink && <ProductImage src={produto.imageLink} alt={produto.descricao} />}
+                    {produto.imageLink && (
+                      <ProductImage src={produto.imageLink} alt={produto.nome ?? produto.descricao} />
+                    )}
                   </div>
                 </Link>
                 <div className="product-body">
                   <Link href={`/produto/${produto.codigoXbz}`}>
-                    <h4>{produto.descricao}</h4>
+                    <h4>{produto.nome ?? produto.descricao}</h4>
                   </Link>
+                  <p>{produto.descricao}</p>
                   <div className="product-sku">SKU {produto.codigoXbz}</div>
                   <div className="product-actions">
                     <AddToQuoteChip
                       productId={produto.id}
                       codigoXbz={produto.codigoXbz}
-                      descricao={produto.descricao}
+                      descricao={produto.nome ?? produto.descricao}
                       imageLink={produto.imageLink}
                     />
                   </div>

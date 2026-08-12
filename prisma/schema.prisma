@@ -21,6 +21,7 @@ model Product {
   codigoXbz      String   @unique // SKU, usado depois para gerar pedido/orçamento
   codigoComposto String? // código com indicação de cor
   codigoAmigavel String? // código da família de produtos
+  nome           String? // título curto (ex: "CANECA ACRÍLICA 400 ML COM TAMPA") — não documentado no PDF, mas presente na resposta real
   descricao      String
   siteLink       String?
   imageLink      String?

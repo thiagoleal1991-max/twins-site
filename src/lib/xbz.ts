@@ -13,6 +13,10 @@ export interface XbzProduto {
   codigoXbz: string;
   codigoComposto: string | null;
   codigoAmigavel: string | null;
+  /** Título curto do produto (ex: "CANECA ACRÍLICA 400 ML COM TAMPA"). Não
+   * documentado no PDF, mas presente na resposta real da API — confirmado
+   * em teste manual (16.178 produtos, sem paginação). */
+  nome: string;
   descricao: string;
   siteLink: string | null;
   imageLink: string | null;
