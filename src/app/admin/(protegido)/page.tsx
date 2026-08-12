@@ -7,7 +7,7 @@ import { CategoriaSelect } from "@/components/admin/CategoriaSelect";
 export const dynamic = "force-dynamic";
 
 interface AdminPageProps {
-  searchParams: { busca?: string; incompletos?: string; ocultos?: string; page?: string };
+  searchParams: { busca?: string; incompletos?: string; completos?: string; ocultos?: string; page?: string };
 }
 
 export default async function AdminPage({ searchParams }: AdminPageProps) {
@@ -16,21 +16,30 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const { produtos, totalItens, totalPaginas, paginaAtual } = await listarProdutosAdmin({
     busca: searchParams.busca,
     apenasIncompletos: searchParams.incompletos === "1",
+    apenasCompletos: searchParams.completos === "1",
     apenasOcultos: searchParams.ocultos === "1",
     page,
   });
 
   function buildLink(
-    overrides: Partial<{ busca: string | undefined; incompletos: string | undefined; ocultos: string | undefined; page: number }>,
+    overrides: Partial<{
+      busca: string | undefined;
+      incompletos: string | undefined;
+      completos: string | undefined;
+      ocultos: string | undefined;
+      page: number;
+    }>,
   ) {
     const params = new URLSearchParams();
     const busca = "busca" in overrides ? overrides.busca : searchParams.busca;
     const incompletos = "incompletos" in overrides ? overrides.incompletos : searchParams.incompletos;
+    const completos = "completos" in overrides ? overrides.completos : searchParams.completos;
     const ocultos = "ocultos" in overrides ? overrides.ocultos : searchParams.ocultos;
     const p = overrides.page ?? paginaAtual;
 
     if (busca) params.set("busca", busca);
     if (incompletos) params.set("incompletos", incompletos);
+    if (completos) params.set("completos", completos);
     if (ocultos) params.set("ocultos", ocultos);
     if (p && p !== 1) params.set("page", String(p));
 
@@ -57,19 +66,25 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
       <div className="chips" style={{ marginBottom: 24 }}>
         <Link
-          href={buildLink({ incompletos: undefined, ocultos: undefined, page: 1 })}
-          className={`chip${!searchParams.incompletos && !searchParams.ocultos ? " active" : ""}`}
+          href={buildLink({ incompletos: undefined, completos: undefined, ocultos: undefined, page: 1 })}
+          className={`chip${!searchParams.incompletos && !searchParams.completos && !searchParams.ocultos ? " active" : ""}`}
         >
           Todos
         </Link>
         <Link
-          href={buildLink({ incompletos: "1", ocultos: undefined, page: 1 })}
+          href={buildLink({ incompletos: undefined, completos: "1", ocultos: undefined, page: 1 })}
+          className={`chip${searchParams.completos === "1" ? " active" : ""}`}
+        >
+          ✓ Completos (com foto e nome)
+        </Link>
+        <Link
+          href={buildLink({ incompletos: "1", completos: undefined, ocultos: undefined, page: 1 })}
           className={`chip${searchParams.incompletos === "1" ? " active" : ""}`}
         >
           ⚠ Incompletos (sem foto/nome)
         </Link>
         <Link
-          href={buildLink({ incompletos: undefined, ocultos: "1", page: 1 })}
+          href={buildLink({ incompletos: undefined, completos: undefined, ocultos: "1", page: 1 })}
           className={`chip${searchParams.ocultos === "1" ? " active" : ""}`}
         >
           Ocultos manualmente
