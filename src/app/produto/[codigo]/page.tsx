@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { buscarProdutoPorCodigo } from "@/lib/products";
+import { buscarProdutoPorCodigo, listarVariantes } from "@/lib/products";
 import { AddToQuoteButton } from "@/components/AddToQuoteButton";
 import { QuoteBar } from "@/components/QuoteBar";
 import { ProductImage } from "@/components/ProductImage";
@@ -15,6 +15,8 @@ export default async function ProdutoPage({ params }: ProdutoPageProps) {
   const produto = await buscarProdutoPorCodigo(params.codigo);
 
   if (!produto) notFound();
+
+  const variantes = await listarVariantes(produto.codigoAmigavel);
 
   return (
     <>
@@ -35,7 +37,27 @@ export default async function ProdutoPage({ params }: ProdutoPageProps) {
               SKU {produto.codigoXbz}
             </p>
             <p style={{ color: "var(--cream-dim)", marginTop: 20, maxWidth: 480 }}>{produto.descricao}</p>
-            <p style={{ color: "var(--muted)", marginTop: 12, maxWidth: 480, fontSize: 13.5 }}>
+
+            {variantes.length > 1 && (
+              <div style={{ marginTop: 24 }}>
+                <p style={{ fontSize: 12.5, color: "var(--muted)", marginBottom: 8 }}>
+                  Cor / variação ({variantes.length} opções):
+                </p>
+                <div className="chips">
+                  {variantes.map((v) => {
+                    const cor = v.codigoComposto?.split("-").pop() || v.codigoXbz;
+                    const ativo = v.codigoXbz === produto.codigoXbz;
+                    return (
+                      <Link key={v.id} href={`/produto/${v.codigoXbz}`} className={`chip${ativo ? " active" : ""}`}>
+                        {cor}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <p style={{ color: "var(--muted)", marginTop: 20, maxWidth: 480, fontSize: 13.5 }}>
               Preço sob consulta — a Twins monta um orçamento personalizado conforme quantidade, personalização e
               prazo de entrega.
             </p>

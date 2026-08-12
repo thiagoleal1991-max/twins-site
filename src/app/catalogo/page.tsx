@@ -124,7 +124,10 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
                     <h4>{produto.nome ?? produto.descricao}</h4>
                   </Link>
                   <p>{produto.descricao}</p>
-                  <div className="product-sku">SKU {produto.codigoXbz}</div>
+                  <div className="product-sku">
+                    SKU {produto.codigoXbz}
+                    {produto.variantes > 1 && ` · ${produto.variantes} cores`}
+                  </div>
                   <div className="product-actions">
                     <AddToQuoteChip
                       productId={produto.id}
