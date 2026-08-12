@@ -88,7 +88,7 @@
   }
   .btn-wpp:hover{transform:translateY(-2px);}
   .mobile-hide{display:flex;}
-  @media (max-width:840px){ .mobile-hide{display:none;} }
+  @media (max-width:840px){ .mobile-hide{display:none !important;} }
 
   /* ---------- hero ---------- */
   .hero{
@@ -128,37 +128,26 @@
   }
   .stat span{font-size:12.5px; color:var(--muted);}
 
-  /* signature: laser-engrave animation */
+  /* signature: brand isotipo */
   .laser-stage{
-    position:relative; aspect-ratio:1/1; max-width:440px; margin-left:auto;
+    position:relative; width:100%; aspect-ratio:1/1; max-width:440px; margin-left:auto;
   }
   .laser-ring{
     position:absolute; inset:0; border-radius:50%;
     border:1px dashed rgba(255,255,255,0.16);
   }
-  .laser-svg{width:100%; height:100%;}
-  .laser-path{
-    fill:none; stroke:var(--cream); stroke-width:1.6;
-    stroke-linecap:round; stroke-linejoin:round;
-    stroke-dasharray: 900; stroke-dashoffset:900;
-    animation: draw 3.2s ease forwards infinite;
-    animation-delay:.4s;
+  .isotipo-img{
+    position:absolute; top:50%; left:50%; width:60%;
+    transform:translate(-50%,-50%);
+    filter:drop-shadow(0 20px 50px rgba(214,79,224,0.35));
+    animation: isotipo-float 4.5s ease-in-out infinite;
   }
-  .laser-head{
-    fill:var(--glow); filter:drop-shadow(0 0 8px var(--glow));
-    offset-path: path("M100,40 C160,40 172,90 172,120 C172,165 140,190 100,190 C58,190 30,163 30,120 C30,78 58,48 100,40 Z");
-    animation: move-head 3.2s ease infinite;
-    animation-delay:.4s;
-  }
-  @keyframes draw{ to{ stroke-dashoffset:0; } }
-  @keyframes move-head{
-    0%{ offset-distance:0%; opacity:1;}
-    92%{ offset-distance:100%; opacity:1;}
-    100%{ offset-distance:100%; opacity:0;}
+  @keyframes isotipo-float{
+    0%,100%{ transform:translate(-50%,-50%) translateY(0); }
+    50%{ transform:translate(-50%,-50%) translateY(-10px); }
   }
   @media (prefers-reduced-motion: reduce){
-    .laser-path{animation:none; stroke-dashoffset:0;}
-    .laser-head{animation:none; opacity:0;}
+    .isotipo-img{animation:none;}
   }
 
   /* ---------- section shell ---------- */
@@ -324,6 +313,13 @@
     .hero-grid{grid-template-columns:1fr;}
     .laser-stage{margin:40px auto 0; max-width:280px;}
   }
+
+  @media (max-width:480px){
+    .nav{padding:14px 16px;}
+    .logo-img{height:20px;}
+    header .btn-wpp{padding:9px 14px; font-size:12.5px;}
+    .wrap{padding:0 20px;}
+  }
 </style>
 </head>
 <body>
@@ -364,11 +360,7 @@
 
     <div class="laser-stage">
       <div class="laser-ring"></div>
-      <svg class="laser-svg" viewBox="0 0 200 200">
-        <path class="laser-path" d="M100,40 C160,40 172,90 172,120 C172,165 140,190 100,190 C58,190 30,163 30,120 C30,78 58,48 100,40 Z" />
-        <circle class="laser-head" r="4"/>
-        <text x="100" y="122" text-anchor="middle" font-family="Space Grotesk" font-weight="700" font-size="30" fill="#F5F1EA" opacity="0.9">t!</text>
-      </svg>
+      <img class="isotipo-img" src="/assets/isotipo-roxo.svg" alt="Isotipo Twins">
     </div>
   </div>
 </section>
