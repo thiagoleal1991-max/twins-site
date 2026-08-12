@@ -31,6 +31,13 @@ model Product {
   categoria      String   @default("Outros") // classificado por palavra-chave, ver src/lib/categorize.ts
   ativo          Boolean  @default(true) // false = sumiu da última sincronização (não deletamos, só ocultamos)
 
+  // Ajustes manuais feitos no painel de administração (/admin) — têm
+  // prioridade sobre os dados/classificação automática da sincronização.
+  categoriaManual   String? // se definido, sobrescreve `categoria` na exibição
+  ocultoManualmente Boolean @default(false) // ex: indisponível, mas a XBZ ainda lista
+  destaque          Boolean @default(false)
+  maisVendido       Boolean @default(false)
+
   syncedAt       DateTime @default(now()) // última vez que foi visto na XBZ
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -39,6 +46,26 @@ model Product {
 
   @@index([categoria])
   @@index([ativo])
+  @@index([destaque])
+  @@index([maisVendido])
+}
+
+// Banners do topo do catálogo — gerenciados em /admin/banners.
+model Banner {
+  id        Int      @id @default(autoincrement())
+
+  tag       String // ex: "Destaque do mês"
+  titulo    String
+  descricao String
+  tamanho   String   @default("grande") // "grande" | "pequeno" — ver .banner / .banner.small no CSS
+  href      String? // link opcional (ex: WhatsApp, ou /catalogo?categoria=...)
+  ordem     Int      @default(0)
+  ativo     Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ativo, ordem])
 }
 
 // Pedido de orçamento feito por um visitante do site (não é o pedido real na XBZ —

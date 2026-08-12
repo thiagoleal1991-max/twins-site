@@ -5,10 +5,12 @@ const PAGE_SIZE_PADRAO = 24;
 const PAGE_SIZE_MAXIMO = 60;
 
 export type OrdenacaoProdutos = "recentes" | "nome" | "categoria";
+export type Vitrine = "destaques" | "mais-vendidos";
 
 export interface ListarProdutosParams {
   busca?: string;
   categoria?: string;
+  vitrine?: Vitrine;
   page?: number;
   pageSize?: number;
   sort?: OrdenacaoProdutos;
@@ -40,17 +42,21 @@ export interface ListarProdutosResultado {
   paginaAtual: number;
 }
 
+// A categoria "efetiva" é a manual (definida no /admin), quando existir —
+// senão cai pra classificação automática por palavra-chave da sincronização.
+const CATEGORIA_EFETIVA_SQL = Prisma.sql`COALESCE(NULLIF(trim("categoriaManual"), ''), "categoria")`;
+
 const ORDER_SQL: Record<OrdenacaoProdutos, Prisma.Sql> = {
   recentes: Prisma.sql`"syncedAt" DESC`,
   nome: Prisma.sql`"nome" ASC`,
-  categoria: Prisma.sql`"categoria" ASC, "nome" ASC`,
+  categoria: Prisma.sql`categoria ASC, "nome" ASC`,
 };
 
 /**
  * Lista o catálogo já agrupado por família de produto (mesmo "codigoAmigavel"
  * = mesmo item em cores diferentes) — mostra 1 card por família em vez de um
- * card por variação de cor. Também exige nome + foto: produtos incompletos
- * (só SKU, sem imagem) ficam no banco mas não aparecem no catálogo público.
+ * card por variação de cor. Exige nome + foto (produtos incompletos ficam no
+ * banco mas não aparecem aqui) e respeita ocultação manual feita no /admin.
  */
 export async function listarProdutos(params: ListarProdutosParams): Promise<ListarProdutosResultado> {
   const page = Math.max(1, params.page ?? 1);
@@ -59,9 +65,12 @@ export async function listarProdutos(params: ListarProdutosParams): Promise<List
 
   const filtros = Prisma.sql`
     "ativo" = true
+    AND "ocultoManualmente" = false
     AND "nome" IS NOT NULL AND trim("nome") != ''
     AND "imageLink" IS NOT NULL AND trim("imageLink") != ''
-    ${params.categoria ? Prisma.sql`AND "categoria" = ${params.categoria}` : Prisma.empty}
+    ${params.categoria ? Prisma.sql`AND ${CATEGORIA_EFETIVA_SQL} = ${params.categoria}` : Prisma.empty}
+    ${params.vitrine === "destaques" ? Prisma.sql`AND "destaque" = true` : Prisma.empty}
+    ${params.vitrine === "mais-vendidos" ? Prisma.sql`AND "maisVendido" = true` : Prisma.empty}
     ${
       params.busca
         ? Prisma.sql`AND ("nome" ILIKE ${"%" + params.busca + "%"} OR "descricao" ILIKE ${"%" + params.busca + "%"})`
@@ -76,7 +85,8 @@ export async function listarProdutos(params: ListarProdutosParams): Promise<List
       SELECT * FROM (
         SELECT DISTINCT ON (COALESCE("codigoAmigavel", "codigoXbz"))
           "id", "xbzId", "codigoXbz", "codigoComposto", "codigoAmigavel", "nome",
-          "descricao", "siteLink", "imageLink", "categoria",
+          "descricao", "siteLink", "imageLink",
+          ${CATEGORIA_EFETIVA_SQL} AS categoria,
           COUNT(*) OVER (PARTITION BY COALESCE("codigoAmigavel", "codigoXbz")) AS variantes
         FROM "Product"
         WHERE ${filtros}
@@ -103,9 +113,15 @@ export async function listarProdutos(params: ListarProdutosParams): Promise<List
 }
 
 export async function buscarProdutoPorCodigo(codigoXbz: string) {
-  return prisma.product.findFirst({
-    where: { codigoXbz, ativo: true },
+  const produto = await prisma.product.findFirst({
+    where: { codigoXbz, ativo: true, ocultoManualmente: false },
   });
+  if (!produto) return null;
+
+  return {
+    ...produto,
+    categoria: produto.categoriaManual?.trim() || produto.categoria,
+  };
 }
 
 /**
@@ -115,9 +131,66 @@ export async function buscarProdutoPorCodigo(codigoXbz: string) {
 export async function listarVariantes(codigoAmigavel: string | null) {
   if (!codigoAmigavel) return [];
   return prisma.product.findMany({
-    where: { codigoAmigavel, ativo: true },
+    where: { codigoAmigavel, ativo: true, ocultoManualmente: false },
     orderBy: { codigoComposto: "asc" },
   });
+}
+
+// =====================================================================
+// Painel administrativo (/admin) — aqui SIM aparecem produtos incompletos
+// e ocultos, porque é justamente onde a equipe vai revisar/corrigir isso.
+// =====================================================================
+
+export interface ListarProdutosAdminParams {
+  busca?: string;
+  apenasIncompletos?: boolean;
+  apenasOcultos?: boolean;
+  page?: number;
+  pageSize?: number;
+}
+
+export async function listarProdutosAdmin(params: ListarProdutosAdminParams) {
+  const page = Math.max(1, params.page ?? 1);
+  const pageSize = Math.min(100, Math.max(1, params.pageSize ?? 50));
+
+  const condicoes: Prisma.ProductWhereInput[] = [];
+
+  if (params.busca) {
+    condicoes.push({
+      OR: [
+        { nome: { contains: params.busca, mode: "insensitive" } },
+        { descricao: { contains: params.busca, mode: "insensitive" } },
+        { codigoXbz: { contains: params.busca, mode: "insensitive" } },
+      ],
+    });
+  }
+  if (params.apenasIncompletos) {
+    condicoes.push({
+      OR: [{ nome: null }, { nome: "" }, { imageLink: null }, { imageLink: "" }],
+    });
+  }
+  if (params.apenasOcultos) {
+    condicoes.push({ ocultoManualmente: true });
+  }
+
+  const where: Prisma.ProductWhereInput = condicoes.length ? { AND: condicoes } : {};
+
+  const [produtos, totalItens] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      orderBy: [{ nome: "asc" }, { id: "asc" }],
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.product.count({ where }),
+  ]);
+
+  return {
+    produtos,
+    totalItens,
+    totalPaginas: Math.max(1, Math.ceil(totalItens / pageSize)),
+    paginaAtual: page,
+  };
 }
 
 export async function listarCategoriasComContagem() {
