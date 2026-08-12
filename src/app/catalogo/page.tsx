@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { listarProdutos, codigoExibicao, type OrdenacaoProdutos, type Vitrine } from "@/lib/products";
-import { listarCategorias } from "@/lib/categorize";
+import { listarNomesCategorias } from "@/lib/categories";
 import { listarBannersAtivos } from "@/lib/banners";
 import { AddToQuoteChip } from "@/components/AddToQuoteChip";
 import { QuoteBar } from "@/components/QuoteBar";
@@ -33,7 +33,7 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
       page,
       sort,
     }),
-    Promise.resolve(listarCategorias()),
+    listarNomesCategorias(),
     listarBannersAtivos(),
   ]);
 

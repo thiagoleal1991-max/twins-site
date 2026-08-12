@@ -50,6 +50,23 @@ model Product {
   @@index([maisVendido])
 }
 
+// Categorias do catálogo, gerenciadas em /admin/categorias — criar, renomear
+// e excluir. A classificação automática por palavra-chave na sincronização
+// (src/lib/categorize.ts) continua sugerindo uma categoria pra cada produto
+// novo, mas a lista de categorias "válidas" pra escolher/filtrar vem daqui,
+// não mais fixa no código.
+model Category {
+  id        Int      @id @default(autoincrement())
+
+  nome      String   @unique
+  ordem     Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ordem])
+}
+
 // Banners do topo do catálogo — gerenciados em /admin/banners.
 model Banner {
   id        Int      @id @default(autoincrement())
