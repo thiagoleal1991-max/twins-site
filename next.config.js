@@ -15,6 +15,11 @@ const nextConfig = {
       { protocol: "https", hostname: "**.minhaxbz.com.br" },
       { protocol: "https", hostname: "xbz.com.br" },
       { protocol: "https", hostname: "**.xbz.com.br" },
+      // Domínio real confirmado das fotos (ex: cdn.xbzbrindes.com.br) — os
+      // dois de cima eram um chute errado, ninguém tinha visto um
+      // `imageLink` de verdade até agora.
+      { protocol: "https", hostname: "xbzbrindes.com.br" },
+      { protocol: "https", hostname: "**.xbzbrindes.com.br" },
     ],
   },
 };

@@ -22,7 +22,12 @@ interface ProductImageProps {
 // isso replicamos a checagem aqui e decidimos ANTES de renderizar o
 // <Image> — mesma queda pro fallback de "sem foto" que qualquer outra
 // imagem quebrada.
-const HOSTS_PERMITIDOS = [/(^|\.)minhaxbz\.com\.br$/i, /(^|\.)xbz\.com\.br$/i];
+const HOSTS_PERMITIDOS = [
+  /(^|\.)minhaxbz\.com\.br$/i,
+  /(^|\.)xbz\.com\.br$/i,
+  // Domínio real confirmado das fotos (ex: cdn.xbzbrindes.com.br).
+  /(^|\.)xbzbrindes\.com\.br$/i,
+];
 
 function ehSrcValida(src: string): boolean {
   if (src.startsWith("/")) return true;
