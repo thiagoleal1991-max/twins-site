@@ -43,6 +43,7 @@ model Product {
   updatedAt      DateTime @updatedAt
 
   quoteItems     QuoteRequestItem[]
+  campanhas      CampanhaSazonal[] // 0 ou mais campanhas (ex: um produto pode estar em "Verão" e "Outubro Rosa" ao mesmo tempo)
 
   @@index([categoria])
   @@index([ativo])
@@ -65,6 +66,26 @@ model Category {
   updatedAt DateTime @updatedAt
 
   @@index([ordem])
+}
+
+// Campanhas sazonais/temáticas (ex: "☀️ Verão", "🎗️ Outubro Rosa") — aparecem
+// como chips extras na barra principal do catálogo, ao lado de Destaques/Mais
+// vendidos, só quando `ativa = true`. Um produto pode estar em 0 ou mais
+// campanhas ao mesmo tempo. Curadoria 100% manual por enquanto (via Prisma
+// Studio — sem UI própria no /admin ainda).
+model CampanhaSazonal {
+  id        Int      @id @default(autoincrement())
+
+  nome      String   @unique
+  icone     String // emoji, ex: "☀️"
+  ativa     Boolean  @default(false)
+
+  produtos  Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ativa])
 }
 
 // Banners do topo do catálogo — gerenciados em /admin/banners.

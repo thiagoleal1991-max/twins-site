@@ -25,6 +25,10 @@ export interface ListarProdutosParams {
   busca?: string;
   categoria?: string;
   vitrine?: Vitrine;
+  /** Nome de uma CampanhaSazonal ativa (ver src/lib/campanhas.ts) — filtra
+   * produtos relacionados a ela. Mutuamente exclusivo com `vitrine`/`categoria`
+   * na UI (chips separados), mas nada impede combinar aqui. */
+  campanha?: string;
   page?: number;
   pageSize?: number;
   sort?: OrdenacaoProdutos;
@@ -77,6 +81,17 @@ export async function listarProdutos(params: ListarProdutosParams): Promise<List
   const pageSize = Math.min(PAGE_SIZE_MAXIMO, Math.max(1, params.pageSize ?? PAGE_SIZE_PADRAO));
   const offset = (page - 1) * pageSize;
 
+  // A relação Product<->CampanhaSazonal é m2m — mais simples resolver os IDs
+  // via Prisma normal aqui do que replicar a tabela de junção em SQL bruto.
+  let idsCampanha: number[] | null = null;
+  if (params.campanha) {
+    const produtosCampanha = await prisma.product.findMany({
+      where: { campanhas: { some: { nome: params.campanha, ativa: true } } },
+      select: { id: true },
+    });
+    idsCampanha = produtosCampanha.map((p) => p.id);
+  }
+
   const filtros = Prisma.sql`
     "ativo" = true
     AND "ocultoManualmente" = false
@@ -85,6 +100,7 @@ export async function listarProdutos(params: ListarProdutosParams): Promise<List
     ${params.categoria ? Prisma.sql`AND ${CATEGORIA_EFETIVA_SQL} = ${params.categoria}` : Prisma.empty}
     ${params.vitrine === "destaques" ? Prisma.sql`AND "destaque" = true` : Prisma.empty}
     ${params.vitrine === "mais-vendidos" ? Prisma.sql`AND "maisVendido" = true` : Prisma.empty}
+    ${idsCampanha ? Prisma.sql`AND "id" = ANY(${idsCampanha}::int[])` : Prisma.empty}
     ${
       params.busca
         ? Prisma.sql`AND ("nome" ILIKE ${"%" + params.busca + "%"} OR "descricao" ILIKE ${"%" + params.busca + "%"})`
