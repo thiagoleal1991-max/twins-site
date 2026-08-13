@@ -28,7 +28,9 @@ export default async function ProdutoPage({ params }: ProdutoPageProps) {
         <div style={{ display: "grid", gridTemplateColumns: "360px 1fr", gap: 40, marginTop: 20 }}>
           <div className="product-thumb" style={{ borderRadius: "var(--radius)" }}>
             <span className="product-cat-badge">{produto.categoria}</span>
-            {produto.imageLink && <ProductImage src={produto.imageLink} alt={produto.nome ?? produto.descricao} />}
+            {produto.imageLink && (
+              <ProductImage src={produto.imageLink} alt={produto.nome ?? produto.descricao} priority />
+            )}
           </div>
 
           <div>

@@ -942,12 +942,8 @@ footer.site-footer {
   justify-content: center;
 }
 
-.product-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  padding: 12px;
-}
+/* A imagem em si (next/image, modo `fill`) já vem com object-fit e padding
+   via style inline — ver src/components/ProductImage.tsx. */
 
 .product-cat-badge {
   position: absolute;
