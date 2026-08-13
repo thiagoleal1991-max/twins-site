@@ -1,16 +1,18 @@
 import Link from "next/link";
 import { listarProdutos, codigoExibicao, type OrdenacaoProdutos, type Vitrine } from "@/lib/products";
-import { listarNomesCategorias } from "@/lib/categories";
+import { listarMegaMenu } from "@/lib/mega-menu";
+import { listarCampanhasAtivas } from "@/lib/campanhas";
 import { listarBannersAtivos } from "@/lib/banners";
 import { AddToQuoteChip } from "@/components/AddToQuoteChip";
 import { QuoteBar } from "@/components/QuoteBar";
 import { SortSelect } from "@/components/SortSelect";
 import { ProductImage } from "@/components/ProductImage";
+import { CategoriasMegaMenu, type ChipItem, type GrupoMegaMenuUi } from "@/components/CategoriasMegaMenu";
 
 export const dynamic = "force-dynamic";
 
 interface CatalogoPageProps {
-  searchParams: { busca?: string; categoria?: string; vitrine?: string; page?: string; sort?: string };
+  searchParams: { busca?: string; categoria?: string; vitrine?: string; campanha?: string; page?: string; sort?: string };
 }
 
 const ORDENACOES_VALIDAS: OrdenacaoProdutos[] = ["recentes", "nome", "categoria"];
@@ -24,38 +26,75 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
   const vitrine = VITRINES_VALIDAS.includes(searchParams.vitrine as Vitrine)
     ? (searchParams.vitrine as Vitrine)
     : undefined;
+  const campanha = !vitrine ? searchParams.campanha : undefined;
 
-  const [{ produtos, totalItens, totalPaginas, paginaAtual }, categorias, banners] = await Promise.all([
+  const [{ produtos, totalItens, totalPaginas, paginaAtual }, grupos, campanhasAtivas, banners] = await Promise.all([
     listarProdutos({
       busca: searchParams.busca,
-      categoria: vitrine ? undefined : searchParams.categoria,
+      categoria: vitrine || campanha ? undefined : searchParams.categoria,
       vitrine,
+      campanha,
       page,
       sort,
     }),
-    listarNomesCategorias(),
+    listarMegaMenu(),
+    listarCampanhasAtivas(),
     listarBannersAtivos(),
   ]);
 
   function buildLink(
-    overrides: Partial<{ busca: string; categoria: string; vitrine: string; page: number; sort: string }>,
+    overrides: Partial<{ busca: string; categoria: string; vitrine: string; campanha: string; page: number; sort: string }>,
   ) {
     const params = new URLSearchParams();
     const busca = "busca" in overrides ? overrides.busca : searchParams.busca;
     const categoria = "categoria" in overrides ? overrides.categoria : searchParams.categoria;
     const vitrineParam = "vitrine" in overrides ? overrides.vitrine : vitrine;
+    const campanhaParam = "campanha" in overrides ? overrides.campanha : campanha;
     const pageParam = overrides.page ?? paginaAtual;
     const sortParam = overrides.sort ?? sort;
 
     if (busca) params.set("busca", busca);
-    if (categoria && !vitrineParam) params.set("categoria", categoria);
+    if (categoria && !vitrineParam && !campanhaParam) params.set("categoria", categoria);
     if (vitrineParam) params.set("vitrine", vitrineParam);
+    if (campanhaParam) params.set("campanha", campanhaParam);
     if (pageParam && pageParam !== 1) params.set("page", String(pageParam));
     if (sortParam && sortParam !== "nome") params.set("sort", sortParam);
 
     const qs = params.toString();
     return qs ? `/catalogo?${qs}` : "/catalogo";
   }
+
+  const chips: ChipItem[] = [
+    {
+      href: buildLink({ categoria: undefined, vitrine: undefined, campanha: undefined, page: 1 }),
+      label: "Todos",
+      active: !searchParams.categoria && !vitrine && !campanha,
+    },
+    {
+      href: buildLink({ categoria: undefined, vitrine: "destaques", campanha: undefined, page: 1 }),
+      label: "★ Destaques",
+      active: vitrine === "destaques",
+    },
+    {
+      href: buildLink({ categoria: undefined, vitrine: "mais-vendidos", campanha: undefined, page: 1 }),
+      label: "🔥 Mais vendidos",
+      active: vitrine === "mais-vendidos",
+    },
+    ...campanhasAtivas.map((c) => ({
+      href: buildLink({ categoria: undefined, vitrine: undefined, campanha: c.nome, page: 1 }),
+      label: `${c.icone} ${c.nome}`,
+      active: campanha === c.nome,
+    })),
+  ];
+
+  const gruposUi: GrupoMegaMenuUi[] = grupos.map((grupo) => ({
+    nome: grupo.nome,
+    itens: grupo.categorias.map((cat) => ({
+      nome: cat.nome,
+      href: buildLink({ categoria: cat.nome, vitrine: undefined, campanha: undefined, page: 1 }),
+      active: searchParams.categoria === cat.nome && !vitrine && !campanha,
+    })),
+  }));
 
   // Janela de páginas visível na paginação (ex: 1 2 3 … 46), como no protótipo
   const janelaPaginas = new Set<number>([1, totalPaginas, paginaAtual, paginaAtual - 1, paginaAtual + 1]);
@@ -92,7 +131,7 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
       )}
 
       <div className="toolbar">
-        <div className="wrap toolbar-inner">
+        <div className="wrap">
           <form className="search-box" action="/catalogo" method="get">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B29FCB" strokeWidth="2">
               <circle cx="11" cy="11" r="7" />
@@ -104,39 +143,14 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
               placeholder="Buscar produto (ex: caneca, mochila, caderno)..."
               defaultValue={searchParams.busca ?? ""}
             />
-            {searchParams.categoria && !vitrine && <input type="hidden" name="categoria" value={searchParams.categoria} />}
+            {searchParams.categoria && !vitrine && !campanha && (
+              <input type="hidden" name="categoria" value={searchParams.categoria} />
+            )}
             {vitrine && <input type="hidden" name="vitrine" value={vitrine} />}
+            {campanha && <input type="hidden" name="campanha" value={campanha} />}
             {sort !== "nome" && <input type="hidden" name="sort" value={sort} />}
           </form>
-          <div className="chips">
-            <Link
-              href={buildLink({ categoria: undefined, vitrine: undefined, page: 1 })}
-              className={`chip${!searchParams.categoria && !vitrine ? " active" : ""}`}
-            >
-              Todos
-            </Link>
-            <Link
-              href={buildLink({ categoria: undefined, vitrine: "destaques", page: 1 })}
-              className={`chip${vitrine === "destaques" ? " active" : ""}`}
-            >
-              ★ Destaques
-            </Link>
-            <Link
-              href={buildLink({ categoria: undefined, vitrine: "mais-vendidos", page: 1 })}
-              className={`chip${vitrine === "mais-vendidos" ? " active" : ""}`}
-            >
-              🔥 Mais vendidos
-            </Link>
-            {categorias.map((cat) => (
-              <Link
-                key={cat}
-                href={buildLink({ categoria: cat, vitrine: undefined, page: 1 })}
-                className={`chip${searchParams.categoria === cat && !vitrine ? " active" : ""}`}
-              >
-                {cat}
-              </Link>
-            ))}
-          </div>
+          <CategoriasMegaMenu chips={chips} grupos={gruposUi} abrirPorPadrao={Boolean(searchParams.categoria)} />
         </div>
       </div>
 
