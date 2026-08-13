@@ -94,7 +94,7 @@ async function upsertLote(lote: XbzProduto[], syncedAt: Date): Promise<{ criados
       ${p.siteLink},
       ${p.imageLink},
       ${p.cadastroData ? new Date(p.cadastroData) : null},
-      ${categorizar(`${p.nome ?? ""} ${p.descricao}`)},
+      ${categorizar(p.nome ?? "", p.descricao)},
       true,
       ${syncedAt},
       now(),

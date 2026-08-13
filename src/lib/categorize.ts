@@ -182,11 +182,26 @@ const REGRAS: CategoryRule[] = [
   },
 ];
 
-export function categorizar(descricao: string): string {
-  const texto = descricao.toLowerCase();
+// O nome do produto (ex: "BLOCO DE NOTAS COM CANETA") manda mais do que a
+// descrição na hora de classificar — a descrição costuma citar acessórios
+// que acompanham o produto (ex: um bloco de notas "que acompanha caneta"),
+// e sem essa prioridade esse tipo de produto caía em "Canetas" em vez de
+// "Blocos e Cadernetas" só porque a palavra "caneta" aparecia em algum
+// lugar do texto combinado. Por isso: primeiro tenta bater com o nome
+// sozinho; só cai pra descrição (comportamento antigo) se nada bater lá —
+// cobre os casos de nome vazio/incompleto.
+export function categorizar(nome: string, descricao: string): string {
+  const nomeTexto = nome.toLowerCase();
+  const descricaoTexto = descricao.toLowerCase();
 
   for (const regra of REGRAS) {
-    if (regra.palavrasChave.some((palavra) => texto.includes(palavra))) {
+    if (regra.palavrasChave.some((palavra) => nomeTexto.includes(palavra))) {
+      return regra.categoria;
+    }
+  }
+
+  for (const regra of REGRAS) {
+    if (regra.palavrasChave.some((palavra) => descricaoTexto.includes(palavra))) {
       return regra.categoria;
     }
   }
