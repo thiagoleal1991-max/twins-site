@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin-auth";
+import { sincronizarProdutosXbz } from "@/lib/sync";
 
 function revalidarTudo() {
   revalidatePath("/admin/categorias");
@@ -64,5 +65,16 @@ export async function excluirCategoria(id: number) {
     prisma.category.delete({ where: { id } }),
   ]);
 
+  revalidarTudo();
+}
+
+// Dispara uma sincronização com a XBZ na hora, sem esperar o cron semanal —
+// útil depois de mudar as regras de categorização automática (ver
+// src/lib/categorize.ts), já que a sincronização reclassifica todo mundo a
+// cada rodada. Conta como 1 chamada do limite diário de 24 (compartilhado
+// com o ERP), então não expomos isso em nenhum lugar automático.
+export async function dispararSincronizacaoManual() {
+  requireAdmin();
+  await sincronizarProdutosXbz();
   revalidarTudo();
 }

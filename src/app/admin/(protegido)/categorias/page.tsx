@@ -1,10 +1,21 @@
 import { listarCategoriasDb, contarProdutosPorCategoria } from "@/lib/categories";
-import { criarCategoria, renomearCategoria, excluirCategoria } from "./actions";
+import { prisma } from "@/lib/db";
+import { criarCategoria, renomearCategoria, excluirCategoria, dispararSincronizacaoManual } from "./actions";
 
 export const dynamic = "force-dynamic";
 
+const STATUS_LABEL: Record<string, string> = {
+  success: "sucesso",
+  error: "erro",
+  running: "em andamento",
+};
+
 export default async function AdminCategoriasPage() {
-  const [categorias, contagens] = await Promise.all([listarCategoriasDb(), contarProdutosPorCategoria()]);
+  const [categorias, contagens, ultimoSync] = await Promise.all([
+    listarCategoriasDb(),
+    contarProdutosPorCategoria(),
+    prisma.syncLog.findFirst({ orderBy: { startedAt: "desc" } }),
+  ]);
 
   return (
     <main className="wrap" style={{ paddingTop: 32, paddingBottom: 60 }}>
@@ -13,6 +24,43 @@ export default async function AdminCategoriasPage() {
         Renomear atualiza automaticamente os produtos que já usam essa categoria. Excluir joga os produtos
         ajustados manualmente pra ela de volta na classificação automática.
       </p>
+
+      <div
+        style={{
+          border: "1px solid var(--line)",
+          borderRadius: 10,
+          padding: "14px 16px",
+          marginBottom: 32,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 16,
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ fontSize: 13, color: "var(--muted)" }}>
+          {ultimoSync ? (
+            <>
+              Última sincronização: {new Date(ultimoSync.startedAt).toLocaleString("pt-BR")} —{" "}
+              {STATUS_LABEL[ultimoSync.status] ?? ultimoSync.status}
+              {ultimoSync.status === "success" && (
+                <> ({ultimoSync.totalFetched} produtos, {ultimoSync.totalUpdated} atualizados)</>
+              )}
+              <br />
+              Mudou uma regra de categoria automática? Sincronize de novo pra reclassificar os produtos já
+              importados sem esperar a próxima segunda-feira. Isso conta como 1 chamada do limite diário
+              compartilhado com o ERP.
+            </>
+          ) : (
+            "Nenhuma sincronização registrada ainda."
+          )}
+        </div>
+        <form action={dispararSincronizacaoManual}>
+          <button className="btn-wpp" style={{ border: "none" }} type="submit">
+            Sincronizar agora
+          </button>
+        </form>
+      </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 40 }}>
         {categorias.length === 0 && <p style={{ color: "var(--muted)" }}>Nenhuma categoria cadastrada ainda.</p>}
