@@ -22,7 +22,9 @@ export default async function AdminCategoriasPage() {
       <h1 style={{ fontSize: 24, marginBottom: 8 }}>Categorias</h1>
       <p style={{ color: "var(--muted)", fontSize: 13.5, marginBottom: 24 }}>
         Renomear atualiza automaticamente os produtos que já usam essa categoria. Excluir joga os produtos
-        ajustados manualmente pra ela de volta na classificação automática.
+        ajustados manualmente pra ela de volta na classificação automática. "Públicas" é quantas famílias de
+        produto (cores já agrupadas) realmente aparecem em /catalogo — só conta o que tem foto, nome, está
+        ativo e não foi ocultado manualmente. Costuma ser bem menor que o total de linhas no banco.
       </p>
 
       <div
@@ -96,8 +98,12 @@ export default async function AdminCategoriasPage() {
                 Salvar
               </button>
             </form>
-            <span style={{ color: "var(--muted)", fontSize: 12.5, fontFamily: "var(--mono)" }}>
-              {contagens[cat.nome] ?? 0} produto(s)
+            <span style={{ color: "var(--muted)", fontSize: 12.5, fontFamily: "var(--mono)", textAlign: "right" }}>
+              {contagens[cat.nome]?.total ?? 0} linha(s) no banco
+              <br />
+              <span style={{ color: (contagens[cat.nome]?.familiasPublicas ?? 0) > 0 ? "#8fd99f" : "#ff8080" }}>
+                {contagens[cat.nome]?.familiasPublicas ?? 0} pública(s) em /catalogo
+              </span>
             </span>
             <form action={excluirCategoria.bind(null, cat.id)}>
               <button className="btn-ghost" type="submit" style={{ color: "#ff8080" }}>

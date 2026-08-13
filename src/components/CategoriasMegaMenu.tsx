@@ -17,22 +17,26 @@ export interface GrupoMegaMenuUi {
 interface CategoriasMegaMenuProps {
   chips: ChipItem[];
   grupos: GrupoMegaMenuUi[];
-  /** Abre o menu já aberto quando a página carrega com uma categoria
-   * selecionada, pra dar contexto de onde ela está no agrupamento. */
-  abrirPorPadrao: boolean;
 }
 
 // Barra principal enxuta (Todos / Destaques / Mais vendidos / campanhas
 // sazonais ativas) + botão "Categorias" que abre um mega-menu agrupado por
 // tema — substitui a lista longa de 50 chips de categoria soltos.
-export function CategoriasMegaMenu({ chips, grupos, abrirPorPadrao }: CategoriasMegaMenuProps) {
-  const [aberto, setAberto] = useState(abrirPorPadrao);
+//
+// Fecha explicitamente ao clicar em qualquer link (chip ou categoria) — a
+// navegação do Next.js entre buscas no /catalogo não recria esse componente
+// do zero, então sem isso o painel ficava "grudado" aberto por cima dos
+// resultados depois de escolher uma categoria (o estado `aberto` não se
+// reavalia sozinho só porque a URL mudou).
+export function CategoriasMegaMenu({ chips, grupos }: CategoriasMegaMenuProps) {
+  const [aberto, setAberto] = useState(false);
+  const fechar = () => setAberto(false);
 
   return (
     <>
       <div className="chips">
         {chips.map((chip) => (
-          <Link key={chip.href} href={chip.href} className={`chip${chip.active ? " active" : ""}`}>
+          <Link key={chip.href} href={chip.href} className={`chip${chip.active ? " active" : ""}`} onClick={fechar}>
             {chip.label}
           </Link>
         ))}
@@ -54,7 +58,12 @@ export function CategoriasMegaMenu({ chips, grupos, abrirPorPadrao }: Categorias
           <div key={grupo.nome} className="mega-col">
             <h5>{grupo.nome}</h5>
             {grupo.itens.map((item) => (
-              <Link key={item.nome} href={item.href} className={item.active ? "active" : undefined}>
+              <Link
+                key={item.nome}
+                href={item.href}
+                className={item.active ? "active" : undefined}
+                onClick={fechar}
+              >
                 {item.nome}
               </Link>
             ))}

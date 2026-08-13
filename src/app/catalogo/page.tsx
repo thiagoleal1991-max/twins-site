@@ -150,7 +150,7 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
             {campanha && <input type="hidden" name="campanha" value={campanha} />}
             {sort !== "nome" && <input type="hidden" name="sort" value={sort} />}
           </form>
-          <CategoriasMegaMenu chips={chips} grupos={gruposUi} abrirPorPadrao={Boolean(searchParams.categoria)} />
+          <CategoriasMegaMenu chips={chips} grupos={gruposUi} />
         </div>
       </div>
 

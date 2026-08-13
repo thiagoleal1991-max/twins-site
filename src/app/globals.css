@@ -731,6 +731,14 @@ footer.site-footer {
   margin-top: 32px;
 }
 
+/* Com o mega-menu aberto, a barra fica alta demais pra continuar grudada no
+   topo — se ficasse sticky, sobrepunha os resultados abaixo (especialmente
+   em telas mais baixas). Solta o sticky enquanto o menu está aberto, pra
+   virar rolagem de página normal. */
+.toolbar:has(.mega.open) {
+  position: static;
+}
+
 .search-box {
   display: flex;
   align-items: center;
