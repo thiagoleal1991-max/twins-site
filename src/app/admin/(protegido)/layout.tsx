@@ -27,6 +27,7 @@ export default function AdminProtegidoLayout({ children }: { children: React.Rea
           <Link href="/admin">Produtos</Link>
           <Link href="/admin/categorias">Categorias</Link>
           <Link href="/admin/banners">Banners</Link>
+          <Link href="/admin/tema">Tema do site</Link>
         </nav>
         <LogoutButton />
       </div>
