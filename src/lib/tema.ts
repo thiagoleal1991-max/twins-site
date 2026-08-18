@@ -30,3 +30,12 @@ export async function temaEfetivo(zona: ZonaTema = "geral"): Promise<TemaEfetivo
   if (tema === "hibrido") return zona === "catalogo" ? "claro" : "escuro";
   return tema;
 }
+
+export async function definirTemaSite(tema: TemaSite): Promise<void> {
+  if (!TEMAS_VALIDOS.includes(tema)) throw new Error("Tema inválido");
+  await prisma.siteConfig.upsert({
+    where: { id: 1 },
+    create: { id: 1, temaSite: tema },
+    update: { temaSite: tema },
+  });
+}
