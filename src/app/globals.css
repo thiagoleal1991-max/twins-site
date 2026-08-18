@@ -2,24 +2,79 @@
  * Design system da Twins — portado dos protótipos:
  *   reference/twins-site-prototipo.html (home)
  *   protótipo do catálogo (upload do usuário)
+ *   reference/twins-comparativo-tema.html (temas claro/escuro/híbrido)
  * Paleta, tipografia e componentes visuais mantidos fielmente.
+ *
+ * ---------------------------------------------------------------------
+ * SISTEMA DE TEMA
+ * ---------------------------------------------------------------------
+ * Roxo (--purple-*) e glow magenta (--glow*) são cor de marca/destaque e
+ * NÃO mudam entre temas (ver src/lib/tema.ts) — só os tokens abaixo (fundo,
+ * texto, superfície, borda) variam, via atributo `data-tema` num ancestral
+ * (normalmente <html>, mas a zona do catálogo pode sobrescrever localmente
+ * pro modo "híbrido" — ver src/app/(catalogo)/layout.tsx).
+ *
+ * Alguns elementos (quote-bar flutuante, CTA final, badge de categoria
+ * sobre foto) usam fundo roxo/glow fixo de propósito — nesses, o texto
+ * também é fixo (branco), não os tokens de tema, porque o fundo deles não
+ * muda.
  */
 
 :root {
   --purple-deep: #3b1560;
   --purple-mid: #5b2a8c;
   --purple-soft: #6e3aa8;
-  --ink: #130b1c;
-  --cream: #f5f1ea;
-  --cream-dim: #dcd3e8;
   --glow: #d64fe0;
   --glow-soft: #c13fd6;
-  --muted: #b29fcb;
-  --line: rgba(255, 255, 255, 0.14);
   --radius: 16px;
   --display: "Space Grotesk", sans-serif;
   --body: "Inter", sans-serif;
   --mono: "JetBrains Mono", monospace;
+
+  /* Tokens de tema — valores padrão (escuro), sobrescritos por [data-tema]. */
+  --bg: #130b1c;
+  --bg2: #3b1560;
+  --surface: rgba(255, 255, 255, 0.04);
+  --border: rgba(255, 255, 255, 0.14);
+  --text: #f5f1ea;
+  --text-dim: #dcd3e8;
+  --muted: #b29fcb;
+  --bg-translucent: rgba(19, 11, 28, 0.9);
+  --texture: rgba(255, 255, 255, 0.09);
+
+  /* Nomes antigos, mantidos como alias — vários componentes (sobretudo o
+     /admin, que fica sempre no tema escuro) usam var(--cream) etc. direto
+     em `style` inline. Mais simples manter os dois nomes apontando pro
+     mesmo valor do que caçar todo `style={{ color: "var(--cream)" }}`
+     espalhado pelo painel administrativo. */
+  --ink: var(--bg);
+  --cream: var(--text);
+  --cream-dim: var(--text-dim);
+  --line: var(--border);
+}
+
+[data-tema="escuro"] {
+  --bg: #130b1c;
+  --bg2: #3b1560;
+  --surface: rgba(255, 255, 255, 0.04);
+  --border: rgba(255, 255, 255, 0.14);
+  --text: #f5f1ea;
+  --text-dim: #dcd3e8;
+  --muted: #b29fcb;
+  --bg-translucent: rgba(19, 11, 28, 0.9);
+  --texture: rgba(255, 255, 255, 0.09);
+}
+
+[data-tema="claro"] {
+  --bg: #faf8f5;
+  --bg2: #f1ecf9;
+  --surface: #ffffff;
+  --border: rgba(59, 21, 96, 0.12);
+  --text: #241833;
+  --text-dim: #5b4e70;
+  --muted: #8878a0;
+  --bg-translucent: rgba(250, 248, 245, 0.9);
+  --texture: rgba(59, 21, 96, 0.07);
 }
 
 * {
@@ -33,12 +88,13 @@ html {
 }
 
 body {
-  background: var(--ink);
-  color: var(--cream);
+  background: var(--bg);
+  color: var(--text);
   font-family: var(--body);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 img,
@@ -63,7 +119,7 @@ section {
 }
 
 .dotted {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1.4px);
+  background-image: radial-gradient(var(--texture) 1px, transparent 1.4px);
   background-size: 22px 22px;
 }
 
@@ -72,9 +128,9 @@ header.site-header {
   position: sticky;
   top: 0;
   z-index: 60;
-  background: rgba(19, 11, 28, 0.9);
+  background: var(--bg-translucent);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--border);
 }
 
 .nav {
@@ -96,11 +152,11 @@ header.site-header {
   display: flex;
   gap: 28px;
   font-size: 14px;
-  color: var(--cream-dim);
+  color: var(--text-dim);
 }
 
 .nav-links a:hover {
-  color: var(--cream);
+  color: var(--text);
 }
 
 .nav-links a.active {
@@ -137,8 +193,8 @@ header.site-header {
 .hero {
   padding: 96px 0 90px;
   background: radial-gradient(120% 90% at 15% -10%, rgba(214, 79, 224, 0.22), transparent 55%),
-    radial-gradient(90% 70% at 100% 0%, rgba(91, 42, 140, 0.35), transparent 60%), var(--ink);
-  border-bottom: 1px solid var(--line);
+    radial-gradient(90% 70% at 100% 0%, rgba(91, 42, 140, 0.35), transparent 60%), var(--bg);
+  border-bottom: 1px solid var(--border);
 }
 
 .hero-grid {
@@ -184,7 +240,7 @@ h1 .accent {
 
 .hero p.lede {
   font-size: 17px;
-  color: var(--cream-dim);
+  color: var(--text-dim);
   max-width: 480px;
   margin-bottom: 34px;
 }
@@ -197,12 +253,12 @@ h1 .accent {
 }
 
 .btn-ghost {
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   padding: 11px 22px;
   border-radius: 999px;
   font-size: 14px;
   font-weight: 600;
-  color: var(--cream-dim);
+  color: var(--text-dim);
 }
 
 .stat-row {
@@ -215,7 +271,7 @@ h1 .accent {
   font-family: var(--display);
   font-size: 26px;
   display: block;
-  color: #fff;
+  color: var(--text);
 }
 
 .stat span {
@@ -235,7 +291,7 @@ h1 .accent {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  border: 1px dashed rgba(255, 255, 255, 0.16);
+  border: 1px dashed var(--border);
 }
 
 .isotipo-img {
@@ -318,27 +374,27 @@ h2 {
 }
 
 .section-head p {
-  color: var(--cream-dim);
+  color: var(--text-dim);
   font-size: 15.5px;
 }
 
 /* ---------- problems ---------- */
 .problems-section {
-  background: var(--purple-deep);
+  background: var(--bg2);
 }
 
 .problem-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1px;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
 }
 
 .problem-card {
-  background: var(--purple-deep);
+  background: var(--bg2);
   padding: 34px 30px;
 }
 
@@ -358,7 +414,7 @@ h2 {
 
 .problem-card p {
   font-size: 14px;
-  color: var(--cream-dim);
+  color: var(--text-dim);
 }
 
 .destino {
@@ -366,7 +422,7 @@ h2 {
   border-left: 2px solid var(--glow);
   padding: 18px 26px;
   font-style: italic;
-  color: var(--cream-dim);
+  color: var(--text-dim);
   font-size: 15px;
   max-width: 640px;
 }
@@ -385,8 +441,8 @@ h2 {
 }
 
 .solution-card {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
-  border: 1px solid var(--line);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 32px 28px;
   transition: border-color 0.25s ease, transform 0.25s ease;
@@ -417,7 +473,7 @@ h2 {
 
 .solution-card p {
   font-size: 14px;
-  color: var(--cream-dim);
+  color: var(--text-dim);
 }
 
 @media (max-width: 840px) {
@@ -437,7 +493,7 @@ h2 {
   display: flex;
   gap: 16px;
   padding: 18px 0;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--border);
 }
 
 .diff-check {
@@ -462,7 +518,7 @@ h2 {
 
 .diff-item p {
   font-size: 13.5px;
-  color: var(--cream-dim);
+  color: var(--text-dim);
 }
 
 @media (max-width: 760px) {
@@ -473,7 +529,7 @@ h2 {
 
 /* ---------- personas ---------- */
 .persona-section {
-  background: var(--purple-deep);
+  background: var(--bg2);
 }
 
 .persona-grid {
@@ -483,10 +539,10 @@ h2 {
 }
 
 .persona-card {
-  background: var(--ink);
+  background: var(--surface);
   border-radius: var(--radius);
   padding: 30px 26px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
 }
 
 .persona-role {
@@ -506,7 +562,7 @@ h2 {
 
 .persona-card p {
   font-size: 13.5px;
-  color: var(--cream-dim);
+  color: var(--text-dim);
 }
 
 @media (max-width: 840px) {
@@ -519,7 +575,7 @@ h2 {
 .manifesto {
   padding: 120px 0;
   text-align: center;
-  background: radial-gradient(60% 100% at 50% 0%, rgba(214, 79, 224, 0.28), transparent 60%), var(--ink);
+  background: radial-gradient(60% 100% at 50% 0%, rgba(214, 79, 224, 0.28), transparent 60%), var(--bg);
 }
 
 .manifesto blockquote {
@@ -539,7 +595,9 @@ h2 {
   font-family: var(--mono);
 }
 
-/* ---------- final cta ---------- */
+/* ---------- final cta ----------
+   Fundo roxo fixo de propósito (não muda com o tema) — por isso o texto
+   aqui dentro também é fixo (branco), não os tokens --text/--text-dim. */
 .final-cta {
   background: linear-gradient(135deg, var(--purple-mid), var(--purple-deep));
   border-radius: 24px;
@@ -549,6 +607,7 @@ h2 {
   margin-inline: auto;
   position: relative;
   overflow: hidden;
+  color: #fff;
 }
 
 .final-cta::before {
@@ -567,7 +626,7 @@ h2 {
 }
 
 .final-cta p {
-  color: var(--cream-dim);
+  color: rgba(255, 255, 255, 0.78);
   max-width: 480px;
   margin: 0 auto 30px;
   font-size: 15px;
@@ -576,7 +635,7 @@ h2 {
 /* ---------- footer ---------- */
 footer.site-footer {
   padding: 60px 0 40px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--border);
 }
 
 .footer-grid {
@@ -605,12 +664,12 @@ footer.site-footer {
 .footer-col a {
   display: block;
   font-size: 14px;
-  color: var(--cream-dim);
+  color: var(--text-dim);
   margin-bottom: 10px;
 }
 
 .footer-col a:hover {
-  color: var(--cream);
+  color: var(--text);
 }
 
 .footer-bottom {
@@ -619,7 +678,7 @@ footer.site-footer {
   flex-wrap: wrap;
   gap: 12px;
   padding-top: 24px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--border);
   font-size: 12.5px;
   color: var(--muted);
 }
@@ -643,7 +702,8 @@ footer.site-footer {
   transform: translateY(0);
 }
 
-/* ---------- whatsapp fab ---------- */
+/* ---------- whatsapp fab ----------
+   Fundo com gradiente de marca fixo — ícone branco funciona nos dois temas. */
 .fab {
   position: fixed;
   bottom: 24px;
@@ -663,70 +723,32 @@ footer.site-footer {
    CATÁLOGO
    ===================================================================== */
 
+/* Banner do topo — imagem pura (o texto já vem embutido na arte), sem
+   overlay renderizado. Proporção de referência 1920x600 (16:5). Ver
+   src/components/BannerImage.tsx. */
 .banner-strip {
-  padding: 28px 0 0;
+  padding: 0;
 }
 
-.banner-track {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 16px;
-}
-
-.banner {
+.banner-strip .banner-slot {
   position: relative;
-  border-radius: 20px;
+  width: 100%;
+  aspect-ratio: 1920 / 600;
+  background: var(--bg2);
   overflow: hidden;
-  min-height: 220px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 26px;
-  background: radial-gradient(120% 140% at 20% 0%, rgba(214, 79, 224, 0.35), transparent 60%),
-    linear-gradient(135deg, var(--purple-mid), var(--purple-deep));
-  border: 1px solid var(--line);
 }
 
-.banner.small {
-  background: radial-gradient(120% 140% at 80% 0%, rgba(110, 58, 168, 0.6), transparent 60%), var(--purple-deep);
-}
-
-.banner .tag {
-  font-family: var(--mono);
-  font-size: 10.5px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--glow-soft);
-  margin-bottom: 10px;
-}
-
-.banner h3 {
-  font-family: var(--display);
-  font-size: 24px;
-  font-weight: 600;
-  margin-bottom: 8px;
-  max-width: 340px;
-}
-
-.banner p {
-  font-size: 13.5px;
-  color: var(--cream-dim);
-  max-width: 320px;
-}
-
-@media (max-width: 840px) {
-  .banner-track {
-    grid-template-columns: 1fr;
-  }
+.banner-strip .banner-slot + .banner-slot {
+  margin-top: 4px;
 }
 
 .toolbar {
   position: sticky;
   top: 65px;
   z-index: 40;
-  background: rgba(19, 11, 28, 0.95);
+  background: var(--bg-translucent);
   backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--border);
   padding: 18px 0;
   margin-top: 32px;
 }
@@ -743,8 +765,8 @@ footer.site-footer {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--line);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 10px 14px;
   margin-bottom: 14px;
@@ -754,7 +776,7 @@ footer.site-footer {
   background: transparent;
   border: none;
   outline: none;
-  color: var(--cream);
+  color: var(--text);
   font-size: 14px;
   width: 100%;
   font-family: var(--body);
@@ -774,8 +796,8 @@ footer.site-footer {
   font-size: 13px;
   padding: 8px 16px;
   border-radius: 999px;
-  border: 1px solid var(--line);
-  color: var(--cream-dim);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
   cursor: pointer;
   white-space: nowrap;
   font-family: var(--body);
@@ -816,7 +838,7 @@ footer.site-footer {
   display: none;
   margin-top: 16px;
   padding-top: 20px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--border);
   grid-template-columns: repeat(4, 1fr);
   gap: 22px 26px;
 }
@@ -837,13 +859,13 @@ footer.site-footer {
 .mega-col a {
   display: block;
   font-size: 13.5px;
-  color: var(--cream-dim);
+  color: var(--text-dim);
   padding: 5px 0;
   text-decoration: none;
 }
 
 .mega-col a:hover {
-  color: var(--cream);
+  color: var(--text);
   text-decoration: underline;
 }
 
@@ -883,9 +905,9 @@ footer.site-footer {
 }
 
 .sort select {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--line);
-  color: var(--cream-dim);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
   font-size: 13px;
   padding: 8px 12px;
   border-radius: 10px;
@@ -918,8 +940,8 @@ footer.site-footer {
 }
 
 .product-card {
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid var(--line);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
   display: flex;
@@ -935,8 +957,7 @@ footer.site-footer {
 .product-thumb {
   aspect-ratio: 1 / 1;
   position: relative;
-  background: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0 2px, transparent 2px 14px),
-    var(--purple-deep);
+  background: repeating-linear-gradient(135deg, var(--texture) 0 2px, transparent 2px 14px), var(--bg2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -945,6 +966,9 @@ footer.site-footer {
 /* A imagem em si (next/image, modo `fill`) já vem com object-fit e padding
    via style inline — ver src/components/ProductImage.tsx. */
 
+/* Badge sobre a foto — fundo escuro fixo de propósito (a foto embaixo tem
+   cor imprevisível; um chip sempre-escuro com texto claro é legível em
+   qualquer imagem, nos dois temas). */
 .product-cat-badge {
   position: absolute;
   top: 10px;
@@ -952,8 +976,8 @@ footer.site-footer {
   font-family: var(--mono);
   font-size: 9.5px;
   background: rgba(19, 11, 28, 0.75);
-  border: 1px solid var(--line);
-  color: var(--cream-dim);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #dcd3e8;
   padding: 4px 9px;
   border-radius: 999px;
   text-transform: uppercase;
@@ -981,7 +1005,7 @@ footer.site-footer {
 
 .product-body p {
   font-size: 12.5px;
-  color: var(--cream-dim);
+  color: var(--text-dim);
   flex: 1;
 }
 
@@ -1037,12 +1061,12 @@ footer.site-footer {
   height: 36px;
   padding: 0 6px;
   border-radius: 10px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
-  color: var(--cream-dim);
+  color: var(--text-dim);
   cursor: pointer;
 }
 
@@ -1058,7 +1082,8 @@ footer.site-footer {
   pointer-events: none;
 }
 
-/* floating quote bar */
+/* floating quote bar — fundo roxo fixo de propósito (não muda com o tema),
+   então o texto aqui dentro também é fixo. */
 .quote-bar {
   position: fixed;
   bottom: 20px;
@@ -1075,6 +1100,7 @@ footer.site-footer {
   z-index: 70;
   transition: transform 0.35s ease;
   max-width: 92vw;
+  color: #fff;
 }
 
 .quote-bar.show {
@@ -1092,8 +1118,8 @@ footer.site-footer {
 }
 
 .quote-cta {
-  background: var(--cream);
-  color: var(--ink);
+  background: #f5f1ea;
+  color: #130b1c;
   font-weight: 700;
   font-size: 13px;
   padding: 10px 18px;
@@ -1128,12 +1154,12 @@ footer.site-footer {
 .form-orcamento input,
 .form-orcamento textarea {
   padding: 10px 12px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: 8px;
   font-size: 14px;
   font-family: inherit;
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--cream);
+  background: var(--surface);
+  color: var(--text);
 }
 
 .carrinho-item {
@@ -1141,7 +1167,7 @@ footer.site-footer {
   justify-content: space-between;
   align-items: center;
   padding: 10px 0;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--border);
 }
 
 .btn {

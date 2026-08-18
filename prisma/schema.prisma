@@ -88,15 +88,17 @@ model CampanhaSazonal {
   @@index([ativa])
 }
 
-// Banners do topo do catálogo — gerenciados em /admin/banners.
+// Banner do topo do catálogo — gerenciado em /admin/banners. É imagem pura
+// (o texto já vem embutido na própria arte, produzida pela Twins) — sem
+// título/descrição renderizados em HTML. Proporção de referência 1920x600.
+// Suporta mais de um banner ativo ao mesmo tempo (empilhados, por `ordem`),
+// mas o uso típico é 1 só — trocar campanha sazonal é só desativar o antigo
+// e ativar o novo, sem mexer em código.
 model Banner {
   id        Int      @id @default(autoincrement())
 
-  tag       String // ex: "Destaque do mês"
-  titulo    String
-  descricao String
-  tamanho   String   @default("grande") // "grande" | "pequeno" — ver .banner / .banner.small no CSS
-  href      String? // link opcional (ex: WhatsApp, ou /catalogo?categoria=...)
+  imagem    String // URL da imagem (mesmo CDN das fotos de produto)
+  href      String? // link opcional ao clicar (ex: /catalogo?categoria=Verão)
   ordem     Int      @default(0)
   ativo     Boolean  @default(true)
 
@@ -104,6 +106,19 @@ model Banner {
   updatedAt DateTime @updatedAt
 
   @@index([ativo, ordem])
+}
+
+// Configuração global de tema do site — não é preferência por visitante
+// (tipo dark mode individual), é uma configuração de marca única aplicada a
+// todos os visitantes até ser trocada. Singleton: sempre a linha id=1,
+// editada via Prisma Studio (sem UI própria no /admin ainda). Ver
+// src/lib/tema.ts.
+model SiteConfig {
+  id       Int    @id @default(1)
+
+  temaSite String @default("escuro") // "claro" | "escuro" | "hibrido"
+
+  updatedAt DateTime @updatedAt
 }
 
 // Pedido de orçamento feito por um visitante do site (não é o pedido real na XBZ —

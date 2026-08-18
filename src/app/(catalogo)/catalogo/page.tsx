@@ -7,6 +7,7 @@ import { AddToQuoteChip } from "@/components/AddToQuoteChip";
 import { QuoteBar } from "@/components/QuoteBar";
 import { SortSelect } from "@/components/SortSelect";
 import { ProductImage } from "@/components/ProductImage";
+import { BannerImage } from "@/components/BannerImage";
 import { CategoriasMegaMenu, type ChipItem, type GrupoMegaMenuUi } from "@/components/CategoriasMegaMenu";
 
 export const dynamic = "force-dynamic";
@@ -103,30 +104,21 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
   return (
     <>
       {banners.length > 0 && (
-        <section className="banner-strip dotted">
-          <div className="wrap">
-            <div className="banner-track">
-              {banners.map((banner) => {
-                const className = `banner${banner.tamanho === "pequeno" ? " small" : ""}`;
-                const conteudo = (
-                  <>
-                    <div className="tag">{banner.tag}</div>
-                    <h3>{banner.titulo}</h3>
-                    <p>{banner.descricao}</p>
-                  </>
-                );
-                return banner.href ? (
-                  <Link key={banner.id} href={banner.href} className={className}>
-                    {conteudo}
-                  </Link>
-                ) : (
-                  <div key={banner.id} className={className}>
-                    {conteudo}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+        <section className="banner-strip">
+          {banners.map((banner, i) => {
+            const imagem = (
+              <div className="banner-slot">
+                <BannerImage src={banner.imagem} alt="" priority={i === 0} />
+              </div>
+            );
+            return banner.href ? (
+              <Link key={banner.id} href={banner.href}>
+                {imagem}
+              </Link>
+            ) : (
+              <div key={banner.id}>{imagem}</div>
+            );
+          })}
         </section>
       )}
 
