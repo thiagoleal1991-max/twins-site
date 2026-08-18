@@ -5,6 +5,11 @@ import { useCart } from "@/lib/cart-context";
 
 const WHATSAPP_NUMERO = "5553984554951";
 
+// O layout da zona catálogo (ver (catalogo)/layout.tsx) lê `temaSite` do
+// banco a cada request — sem forçar essa página como dinâmica também, o
+// Next a pré-renderiza estática no build e o tema fica congelado.
+export const dynamic = "force-dynamic";
+
 export default function OrcamentoPage() {
   const { items, remover, atualizarQuantidade, limpar } = useCart();
   const [enviando, setEnviando] = useState(false);

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { ehSrcValida } from "@/lib/image-hosts";
 
 interface ProductImageProps {
   src: string;
@@ -10,34 +11,6 @@ interface ProductImageProps {
    * — carrega sem lazy loading e com prioridade mais alta. Nos cards do
    * catálogo (muitas imagens, a maioria fora da tela) deixa false. */
   priority?: boolean;
-}
-
-// Mesma lista de domínios liberada em next.config.js (images.remotePatterns).
-// next/image lança um erro de verdade durante o render — não dispara
-// onError, e o React não consegue conter isso com error boundary — tanto
-// pra `src` fora desse formato quanto pra host fora dessa lista. Como
-// `imageLink` vem direto do que a XBZ manda (nunca validado nesse formato,
-// ver src/lib/xbz.ts), uma única linha com valor estranho no banco
-// derrubaria a página de catálogo inteira pros outros produtos junto. Por
-// isso replicamos a checagem aqui e decidimos ANTES de renderizar o
-// <Image> — mesma queda pro fallback de "sem foto" que qualquer outra
-// imagem quebrada.
-const HOSTS_PERMITIDOS = [
-  /(^|\.)minhaxbz\.com\.br$/i,
-  /(^|\.)xbz\.com\.br$/i,
-  // Domínio real confirmado das fotos (ex: cdn.xbzbrindes.com.br).
-  /(^|\.)xbzbrindes\.com\.br$/i,
-];
-
-function ehSrcValida(src: string): boolean {
-  if (src.startsWith("/")) return true;
-  if (!/^https:\/\//i.test(src)) return false;
-  try {
-    const { hostname } = new URL(src);
-    return HOSTS_PERMITIDOS.some((padrao) => padrao.test(hostname));
-  } catch {
-    return false;
-  }
 }
 
 // Usa o otimizador de imagem do Next (configurado em next.config.js) em vez

@@ -1,10 +1,20 @@
 import Link from "next/link";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { temaEfetivo } from "@/lib/tema";
 
 const WHATSAPP_LINK =
   "https://wa.me/5553984554951?text=Ol%C3%A1!%20Quero%20um%20or%C3%A7amento%20para%20minha%20empresa.";
 
-export default function HomePage() {
+// Precisa reler `temaSite` do banco a cada request (não é preferência de
+// visitante, é config de marca — ver src/lib/tema.ts) — sem isso, o Next
+// pré-renderiza a home como estática no build e o tema fica congelado no
+// valor de quando o site foi buildado pela última vez.
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const tema = await temaEfetivo("geral");
+  const footerLogo = tema === "claro" ? "/assets/logo-roxa.svg" : "/assets/logo-branca.svg";
+
   return (
     <>
       <ScrollReveal />
@@ -235,7 +245,7 @@ export default function HomePage() {
         <div className="wrap">
           <div className="footer-grid">
             <div>
-              <img src="/assets/logo-branca.svg" alt="Twins Artigos Personalizados" className="footer-logo-img" />
+              <img src={footerLogo} alt="Twins Artigos Personalizados" className="footer-logo-img" />
               <p style={{ color: "var(--cream-dim)", fontSize: 13.5, marginTop: 10, maxWidth: 260 }}>
                 Potencializar o valor das empresas e eventos através de soluções e produtos personalizados.
               </p>

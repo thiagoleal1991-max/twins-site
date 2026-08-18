@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { CartProvider } from "@/lib/cart-context";
 import { Header } from "@/components/Header";
 import { WhatsappFab } from "@/components/WhatsappFab";
+import { temaEfetivo, buscarTemaSite } from "@/lib/tema";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -10,9 +11,15 @@ export const metadata: Metadata = {
     "Onboarding, reconhecimento e eventos corporativos com produção própria: gravação a laser, impressão 3D, estamparia têxtil e encadernação. Curadoria estratégica, prazo garantido.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Tema padrão do site (home institucional, /admin, etc). A zona do
+  // catálogo pode sobrescrever localmente no modo híbrido — ver
+  // src/app/(catalogo)/layout.tsx e o Header (que se re-tema sozinho por
+  // rota, já que ele é compartilhado entre todas as páginas).
+  const [temaGeral, temaSite] = await Promise.all([temaEfetivo("geral"), buscarTemaSite()]);
+
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" data-tema={temaGeral}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -22,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <CartProvider>
-          <Header />
+          <Header temaSite={temaSite} />
           {children}
           <WhatsappFab />
         </CartProvider>

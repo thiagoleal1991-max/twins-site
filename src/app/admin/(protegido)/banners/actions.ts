@@ -12,18 +12,15 @@ function revalidarTudo() {
 export async function criarBanner(formData: FormData) {
   requireAdmin();
 
-  const tag = String(formData.get("tag") ?? "").trim();
-  const titulo = String(formData.get("titulo") ?? "").trim();
-  const descricao = String(formData.get("descricao") ?? "").trim();
-  const tamanho = String(formData.get("tamanho") ?? "grande");
+  const imagem = String(formData.get("imagem") ?? "").trim();
   const href = String(formData.get("href") ?? "").trim() || null;
   const ordem = Number(formData.get("ordem") ?? 0) || 0;
 
-  if (!tag || !titulo || !descricao) {
-    throw new Error("Preencha tag, título e descrição");
+  if (!imagem) {
+    throw new Error("Preencha a URL da imagem");
   }
 
-  await prisma.banner.create({ data: { tag, titulo, descricao, tamanho, href, ordem } });
+  await prisma.banner.create({ data: { imagem, href, ordem } });
   revalidarTudo();
 }
 
