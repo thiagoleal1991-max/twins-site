@@ -1,5 +1,7 @@
 import { listarBannersAdmin } from "@/lib/banners";
-import { criarBanner, excluirBanner, alternarBannerAtivo } from "./actions";
+import { excluirBanner, alternarBannerAtivo } from "./actions";
+import { NovoBannerForm } from "@/components/admin/NovoBannerForm";
+import { BannerImage } from "@/components/BannerImage";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +13,8 @@ export default async function AdminBannersPage() {
       <h1 style={{ fontSize: 24, marginBottom: 8 }}>Banners do catálogo</h1>
       <p style={{ color: "var(--muted)", fontSize: 13.5, marginBottom: 20 }}>
         Imagem pura, sem texto sobreposto — o texto já vem embutido na própria arte. Proporção de referência
-        1920x600. Pra trocar uma campanha sazonal, é só desativar o banner antigo e ativar o novo.
+        1920x600. Se tiver mais de um banner ativo, o catálogo mostra todos numa faixa que rola lateralmente.
+        Pra trocar uma campanha sazonal, é só desativar o banner antigo e ativar o novo.
       </p>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 40 }}>
@@ -30,23 +33,38 @@ export default async function AdminBannersPage() {
               opacity: b.ativo ? 1 : 0.5,
             }}
           >
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--glow-soft)" }}>
-                ordem {b.ordem}
-              </div>
+            <div style={{ display: "flex", gap: 14, minWidth: 0 }}>
               <div
                 style={{
-                  fontSize: 13,
-                  marginTop: 4,
-                  wordBreak: "break-all",
-                  color: "var(--cream)",
+                  position: "relative",
+                  width: 96,
+                  aspectRatio: "1920 / 600",
+                  borderRadius: 6,
+                  overflow: "hidden",
+                  background: "var(--purple-deep)",
+                  flexShrink: 0,
                 }}
               >
-                {b.imagem}
+                <BannerImage src={b.imagem} alt="" />
               </div>
-              {b.href && (
-                <div style={{ color: "var(--muted)", fontSize: 12, marginTop: 2 }}>Link: {b.href}</div>
-              )}
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--glow-soft)" }}>
+                  ordem {b.ordem}
+                </div>
+                <div
+                  style={{
+                    fontSize: 12,
+                    marginTop: 4,
+                    wordBreak: "break-all",
+                    color: "var(--muted)",
+                  }}
+                >
+                  {b.imagem}
+                </div>
+                {b.href && (
+                  <div style={{ color: "var(--muted)", fontSize: 12, marginTop: 2 }}>Link: {b.href}</div>
+                )}
+              </div>
             </div>
             <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
               <form action={alternarBannerAtivo.bind(null, b.id, b.ativo)}>
@@ -65,14 +83,7 @@ export default async function AdminBannersPage() {
       </div>
 
       <h2 style={{ fontSize: 18, marginBottom: 16 }}>Novo banner</h2>
-      <form action={criarBanner} className="form-orcamento">
-        <input name="imagem" placeholder="URL da imagem (ex: https://cdn.xbzbrindes.com.br/...)" required />
-        <input name="href" placeholder="Link (opcional, ex: /catalogo?categoria=Verão)" />
-        <input name="ordem" type="number" defaultValue={0} placeholder="Ordem de exibição" />
-        <button className="btn-wpp" style={{ border: "none" }} type="submit">
-          Criar banner
-        </button>
-      </form>
+      <NovoBannerForm />
     </main>
   );
 }

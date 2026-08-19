@@ -112,11 +112,13 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
               </div>
             );
             return banner.href ? (
-              <Link key={banner.id} href={banner.href}>
+              <Link key={banner.id} href={banner.href} className="banner-item">
                 {imagem}
               </Link>
             ) : (
-              <div key={banner.id}>{imagem}</div>
+              <div key={banner.id} className="banner-item">
+                {imagem}
+              </div>
             );
           })}
         </section>

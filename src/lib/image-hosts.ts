@@ -14,6 +14,8 @@ const HOSTS_PERMITIDOS = [
   // Domínio real confirmado das fotos de produto (ex: cdn.xbzbrindes.com.br)
   // — banners usam o mesmo CDN.
   /(^|\.)xbzbrindes\.com\.br$/i,
+  // Banners enviados pelo /admin via upload direto pro Vercel Blob.
+  /(^|\.)public\.blob\.vercel-storage\.com$/i,
 ];
 
 export function ehSrcValida(src: string): boolean {
