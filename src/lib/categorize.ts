@@ -8,10 +8,16 @@
 // que sobrar em "Outros" (ou mal classificado) se ajusta manualmente no
 // painel /admin.
 //
-// Ordem importa: a primeira regra que bater "ganha". Categorias de produto
-// bem específico (pen drive, caneca, chaveiro...) vêm antes de categorias
-// mais genéricas/temáticas (Casa, Moda e Estilo, Verão...) pra evitar que o
-// genérico "roube" o match de um produto que na verdade é mais específico.
+// Critério de desempate quando o texto tem palavra-chave de mais de uma
+// categoria (comum em kit/combo, ex: "bloco de notas com caneta"): ganha a
+// que aparece mais CEDO no texto (ver `melhorRegra` mais abaixo) — o
+// substantivo principal do produto normalmente vem no começo do
+// nome/descrição, e o que acompanha vem depois. A ordem das regras aqui no
+// array só desempata em caso de empate de posição (ex: "garrafa térmica"
+// bate com a frase "garrafa térmica" E com a palavra solta "garrafa", nas
+// duas a partir da mesma posição) — por isso categorias de produto bem
+// específico (pen drive, caneca, chaveiro...) continuam vindo antes de
+// categorias mais genéricas/temáticas (Casa, Moda e Estilo, Verão...).
 
 interface CategoryRule {
   categoria: string;
@@ -136,7 +142,18 @@ const REGRAS: CategoryRule[] = [
   { categoria: "Canetas", palavrasChave: ["caneta"] },
   {
     categoria: "Blocos e Cadernetas",
-    palavrasChave: ["bloco de notas", "bloco adesivo", "caderneta", "caderno", "agenda", "post-it"],
+    palavrasChave: [
+      "bloco de notas",
+      "bloco de anotações",
+      "bloco de anotacoes",
+      "bloco adesivo",
+      "bloquinho",
+      "bloco",
+      "caderneta",
+      "caderno",
+      "agenda",
+      "post-it",
+    ],
   },
   {
     categoria: "Conjuntos Executivos",
@@ -190,21 +207,36 @@ const REGRAS: CategoryRule[] = [
 // lugar do texto combinado. Por isso: primeiro tenta bater com o nome
 // sozinho; só cai pra descrição (comportamento antigo) se nada bater lá —
 // cobre os casos de nome vazio/incompleto.
+//
+// Dentro de cada texto (nome ou descrição), o produto/kit combinado ainda é
+// um problema: "BLOCO DE ANOTAÇÕES COM CANETA" tem palavra-chave de duas
+// categorias diferentes. Quem ganha é a palavra-chave que aparece mais
+// CEDO no texto — o substantivo principal do produto normalmente vem no
+// começo do nome, e os acessórios/brindes que acompanham (o "com caneta",
+// "acompanha bloco de notas" etc.) vêm depois. Em caso de empate (mesma
+// posição — ex: "copo" é prefixo de "copo térmico"), desempata pela ordem
+// das regras no array acima, que já é curada pra colocar o caso mais
+// específico primeiro (ver comentário no topo do arquivo).
+function melhorRegra(texto: string): CategoryRule | null {
+  let melhor: CategoryRule | null = null;
+  let melhorPosicao = Infinity;
+
+  for (const regra of REGRAS) {
+    for (const palavra of regra.palavrasChave) {
+      const posicao = texto.indexOf(palavra);
+      if (posicao !== -1 && posicao < melhorPosicao) {
+        melhor = regra;
+        melhorPosicao = posicao;
+      }
+    }
+  }
+
+  return melhor;
+}
+
 export function categorizar(nome: string, descricao: string): string {
   const nomeTexto = nome.toLowerCase();
   const descricaoTexto = descricao.toLowerCase();
 
-  for (const regra of REGRAS) {
-    if (regra.palavrasChave.some((palavra) => nomeTexto.includes(palavra))) {
-      return regra.categoria;
-    }
-  }
-
-  for (const regra of REGRAS) {
-    if (regra.palavrasChave.some((palavra) => descricaoTexto.includes(palavra))) {
-      return regra.categoria;
-    }
-  }
-
-  return "Outros";
+  return melhorRegra(nomeTexto)?.categoria ?? melhorRegra(descricaoTexto)?.categoria ?? "Outros";
 }
