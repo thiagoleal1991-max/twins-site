@@ -725,9 +725,27 @@ footer.site-footer {
 
 /* Banner do topo — imagem pura (o texto já vem embutido na arte), sem
    overlay renderizado. Proporção de referência 1920x600 (16:5). Ver
-   src/components/BannerImage.tsx. */
+   src/components/BannerImage.tsx.
+
+   Com 1 banner só, o scroll-snap não faz diferença (não tem pra onde
+   rolar). Com vários banners ativos, vira uma faixa horizontal que rola
+   com scroll-snap — cada item ocupa a largura toda, então "rolar" avança
+   um banner de cada vez, tipo um carrossel simples sem precisar de JS. */
 .banner-strip {
-  padding: 0;
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.banner-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.banner-strip .banner-item {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  min-width: 0;
 }
 
 .banner-strip .banner-slot {
@@ -736,10 +754,6 @@ footer.site-footer {
   aspect-ratio: 1920 / 600;
   background: var(--bg2);
   overflow: hidden;
-}
-
-.banner-strip .banner-slot + .banner-slot {
-  margin-top: 4px;
 }
 
 .toolbar {

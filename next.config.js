@@ -20,6 +20,9 @@ const nextConfig = {
       // `imageLink` de verdade até agora.
       { protocol: "https", hostname: "xbzbrindes.com.br" },
       { protocol: "https", hostname: "**.xbzbrindes.com.br" },
+      // Banners enviados pelo /admin (upload direto pro Vercel Blob) ficam
+      // hospedados nesse domínio — cada store tem um subdomínio próprio.
+      { protocol: "https", hostname: "**.public.blob.vercel-storage.com" },
     ],
   },
 };
