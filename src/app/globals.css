@@ -21,6 +21,14 @@
  */
 
 :root {
+  /* Sem isso, o navegador ignora nossa paleta customizada pros controles
+     nativos de formulário (<select>, checkbox...) quando o SO está em modo
+     escuro — o Chrome no Windows, por exemplo, renderiza o <select> com a
+     cor de texto nativa dele mesmo com `color` customizado no CSS, ficando
+     quase ilegível sobre o fundo escuro. Redefinido junto com os tokens de
+     tema logo abaixo, pra cada [data-tema] valer certo pros dois esquemas. */
+  color-scheme: dark;
+
   --purple-deep: #3b1560;
   --purple-mid: #5b2a8c;
   --purple-soft: #6e3aa8;
@@ -54,6 +62,7 @@
 }
 
 [data-tema="escuro"] {
+  color-scheme: dark;
   --bg: #130b1c;
   --bg2: #3b1560;
   --surface: rgba(255, 255, 255, 0.04);
@@ -66,6 +75,7 @@
 }
 
 [data-tema="claro"] {
+  color-scheme: light;
   --bg: #faf8f5;
   --bg2: #f1ecf9;
   --surface: #ffffff;
