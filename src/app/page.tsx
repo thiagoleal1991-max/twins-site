@@ -24,8 +24,8 @@ export default async function HomePage() {
           <div>
             <div className="eyebrow">Soluções corporativas personalizadas</div>
             <h1>
-              Brindes que carregam a <span className="accent">identidade</span> da sua empresa — não o fundo da
-              gaveta.
+              Potencializamos o valor das <span className="accent">empresas e eventos</span> através de nossas
+              soluções e produtos personalizados.
             </h1>
             <p className="lede">
               Onboarding, reconhecimento e eventos corporativos com produção própria: gravação a laser, impressão
